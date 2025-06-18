@@ -311,11 +311,11 @@
         <div id="rankingPage" class="hidden flex flex-col items-center justify-center min-h-screen-minus-header">
             <div id="loadingAnimation" class="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-lg">
                 <div class="loading-spinner mb-4"></div>
-                <p class="text-lg font-medium text-gray-700">Memuat Ranking...</p>
+                <p class="text-lg font-medium text-gray-700">Sebentar, ya. Poinnya lagi dimasukin...</p>
             </div>
 
             <div id="rankingContent" class="hidden w-full">
-                <h3 class="text-2xl font-bold mb-6 text-center text-indigo-700">Tampilan Ranking</h3>
+                <h3 class="text-2xl font-bold mb-6 text-center text-indigo-700">Hasil Perolehan Ballot</h3>
                 <div class="mb-4 w-full max-w-md mx-auto">
                     <label for="schoolSearch" class="sr-only">Cari Sekolah</label>
                     <input type="text" id="schoolSearch" class="form-input" placeholder="Cari nama sekolah...">
@@ -329,7 +329,7 @@
                             <table class="min-w-full bg-white rounded-lg shadow">
                                 <thead>
                                     <tr>
-                                        <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">Peringkat</th>
+                                        <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">No</th>
                                         <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider">Nama Sekolah</th>
                                         <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tr-lg">Poin</th>
                                     </tr>
@@ -349,7 +349,7 @@
                             <table class="min-w-full bg-white rounded-lg shadow">
                                 <thead>
                                     <tr>
-                                        <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">Peringkat</th>
+                                        <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">No</th>
                                         <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider">Nama Sekolah</th>
                                         <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tr-lg">Poin</th>
                                     </tr>
@@ -372,7 +372,7 @@
     <!-- Logout Confirmation Modal -->
     <div id="logoutModal" class="modal-overlay hidden">
         <div class="modal-content">
-            <h4 class="text-xl font-semibold mb-6">Yakin ingin keluar?</h4>
+            <h4 class="text-xl font-semibold mb-6">Ingin melanjutkan tindakan?</h4>
             <div class="flex justify-center space-x-4">
                 <button id="confirmLogoutBtn" class="btn btn-primary">Keluar</button>
                 <button id="cancelLogoutBtn" class="btn btn-secondary">Tetap di sini</button>
@@ -384,7 +384,7 @@
     <div id="deleteModal" class="modal-overlay hidden">
         <div class="modal-content">
             <h4 class="text-xl font-semibold mb-4">Konfirmasi Penghapusan</h4>
-            <p class="mb-6">Yakin ingin menghapus <span id="deleteSchoolName" class="font-bold"></span>? Tindakan ini tidak dapat dipulihkan kembali.</p>
+            <p class="mb-6">Ingin menghapus <span id="deleteSchoolName" class="font-bold"></span>? Tindakan ini tidak dapat dipulihkan kembali!</p>
             <div class="flex justify-center space-x-4">
                 <button id="confirmDeleteBtn" class="btn btn-danger">Ya, Hapus</button>
                 <button id="cancelDeleteBtn" class="btn btn-secondary">Batal</button>
@@ -396,7 +396,7 @@
     <div id="actionLoadingOverlay" class="modal-overlay hidden">
         <div class="flex flex-col items-center justify-center p-8 rounded-xl">
             <div class="loading-spinner mb-4"></div>
-            <p class="text-lg font-medium text-gray-700">Memproses...</p>
+            <p class="text-lg font-medium text-gray-700">Tunggu Sebentar...</p>
         </div>
     </div>
 
@@ -406,9 +406,9 @@
             <h4 class="text-2xl font-bold text-indigo-700 mb-4">Informasi</h4>
             <p class="text-lg text-gray-700 mb-6">
                 Halo Guys! Selamat datang di Web Ranking Ballot LKBB ANGKASA Season 2 :D
-                Pemeringkatan hasil ballot akan segera dilakukan pada hari Sabtu, 21 Juni 2025.
+ Pemeringkatan hasil ballot akan segera dilakukan pada hari Sabtu, 21 Juni 2025. Pantengin terus, ya! XD
             </p>
-            <button id="closeAnnouncementBtn" class="btn btn-primary w-full">Baiklah min</button>
+            <button id="closeAnnouncementBtn" class="btn btn-primary w-full">Baiklah minsal</button>
         </div>
     </div>
 
