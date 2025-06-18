@@ -176,6 +176,14 @@
             background-color: transparent;
             box-shadow: none;
         }
+        /* Specific style for announcement modal content */
+        #announcementModal .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -183,13 +191,13 @@
     <header class="header">
         <h1 class="text-3xl font-extrabold mb-1">Ranking Ballot</h1>
         <h2 class="text-xl font-semibold mb-1">LKBB ANGKASA Season 2</h2>
-        <p class="text-lg font-medium">SMA NEGERI 1 BANGSAL</p>
+        <p class="text-lg font-medium">21 JUNI 2025</p>
     </header>
 
     <div class="container">
         <!-- Homepage -->
-        <div id="homePage" class="flex flex-col items-center justify-center min-h-screen-minus-header">
-            <h3 class="text-2xl font-bold mb-8 text-center">Selamat Datang!<br>Silakan Pilih Tindakan</h3>
+        <div id="homePage" class="hidden flex flex-col items-center justify-center min-h-screen-minus-header">
+            <h3 class="text-2xl font-bold mb-8 text-center">Selamat Datang<br>Silakan pilih tindakan</h3>
             <div class="space-y-4">
                 <button id="viewBallotBtn" class="btn btn-primary w-full md:w-auto">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -233,7 +241,7 @@
                 <!-- SMP/MTs Input -->
                 <div class="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-md">
                     <h4 class="text-xl font-semibold mb-4 text-center text-emerald-700">Tingkat SMP/MTs</h4>
-                    <p id="smpAdminLastUpdated" class="text-xs text-gray-500 mt-2 text-right">Poin diperbarui pada: -</p>
+                    <p id="smpAdminLastUpdated" class="text-xs text-gray-500 mt-2 text-right">Diperbarui pada: -</p>
                     <div class="mb-4">
                         <label for="smpName" class="block text-gray-700 text-sm font-semibold mb-2">Nama Sekolah:</label>
                         <input type="text" id="smpName" class="form-input" placeholder="Contoh: SMPN 1 Jakarta">
@@ -263,7 +271,7 @@
                 <!-- SMA/SMK/MA Input -->
                 <div class="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-md">
                     <h4 class="text-xl font-semibold mb-4 text-center text-orange-700">Tingkat SMA/SMK/MA</h4>
-                    <p id="smaAdminLastUpdated" class="text-xs text-gray-500 mt-2 text-right">Poin diperbarui pada: -</p>
+                    <p id="smaAdminLastUpdated" class="text-xs text-gray-500 mt-2 text-right">Diperbarui pada: -</p>
                     <div class="mb-4">
                         <label for="smaName" class="block text-gray-700 text-sm font-semibold mb-2">Nama Sekolah:</label>
                         <input type="text" id="smaName" class="form-input" placeholder="Contoh: SMAN 8 Bandung">
@@ -303,25 +311,25 @@
         <div id="rankingPage" class="hidden flex flex-col items-center justify-center min-h-screen-minus-header">
             <div id="loadingAnimation" class="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-lg">
                 <div class="loading-spinner mb-4"></div>
-                <p class="text-lg font-medium text-gray-700">Memuat Poin...</p>
+                <p class="text-lg font-medium text-gray-700">Memuat Ranking...</p>
             </div>
 
             <div id="rankingContent" class="hidden w-full">
-                <h3 class="text-2xl font-bold mb-6 text-center text-indigo-700">Hasil Perolehan Ballot</h3>
+                <h3 class="text-2xl font-bold mb-6 text-center text-indigo-700">Tampilan Ranking</h3>
                 <div class="mb-4 w-full max-w-md mx-auto">
-                    <label for="schoolSearch" class="sr-only">Cari</label>
+                    <label for="schoolSearch" class="sr-only">Cari Sekolah</label>
                     <input type="text" id="schoolSearch" class="form-input" placeholder="Cari nama sekolah...">
                 </div>
                 <div class="flex flex-col md:flex-row gap-6 w-full">
                     <!-- SMP/MTs Ranking Display -->
                     <div class="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-md">
                         <h4 class="text-xl font-semibold mb-4 text-center text-emerald-700">Ranking SMP/MTs</h4>
-                        <p id="smpRankingLastUpdated" class="text-xs text-gray-500 mt-2 text-right">Poin telah diperbarui pada: -</p>
+                        <p id="smpRankingLastUpdated" class="text-xs text-gray-500 mt-2 text-right">Diperbarui pada: -</p>
                         <div class="table-container">
                             <table class="min-w-full bg-white rounded-lg shadow">
                                 <thead>
                                     <tr>
-                                        <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">Nomor</th>
+                                        <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">Peringkat</th>
                                         <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider">Nama Sekolah</th>
                                         <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tr-lg">Poin</th>
                                     </tr>
@@ -336,12 +344,12 @@
                     <!-- SMA/SMK/MA Ranking Display -->
                     <div class="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-md">
                         <h4 class="text-xl font-semibold mb-4 text-center text-orange-700">Ranking SMA/SMK/MA</h4>
-                        <p id="smaRankingLastUpdated" class="text-xs text-gray-500 mt-2 text-right">Poin telah diperbarui pada: -</p>
+                        <p id="smaRankingLastUpdated" class="text-xs text-gray-500 mt-2 text-right">Diperbarui pada: -</p>
                         <div class="table-container">
                             <table class="min-w-full bg-white rounded-lg shadow">
                                 <thead>
                                     <tr>
-                                        <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">Nomor</th>
+                                        <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">Peringkat</th>
                                         <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider">Nama Sekolah</th>
                                         <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tr-lg">Poin</th>
                                     </tr>
@@ -392,6 +400,18 @@
         </div>
     </div>
 
+    <!-- Announcement Modal (NEW FEATURE) -->
+    <div id="announcementModal" class="modal-overlay">
+        <div class="modal-content w-full max-w-sm p-6 bg-white rounded-xl shadow-lg"> <!-- Added bg-white, rounded-xl, shadow-lg here -->
+            <h4 class="text-2xl font-bold text-indigo-700 mb-4">Informasi</h4>
+            <p class="text-lg text-gray-700 mb-6">
+                Halo Guys! Selamat datang di Web Ranking Ballot LKBB ANGKASA Season 2 :D
+                Pemeringkatan hasil ballot akan segera dilakukan pada hari Sabtu, 21 Juni 2025.
+            </p>
+            <button id="closeAnnouncementBtn" class="btn btn-primary w-full">Baiklah min</button>
+        </div>
+    </div>
+
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
@@ -399,18 +419,18 @@
         import { getFirestore, collection, setDoc, doc, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
         // Firebase configuration and initialization
-       const firebaseConfig = {
-  apiKey: "AIzaSyC0LcRmLgNiQKEXhTWJ8P_KU7AQhASGsMg",
-  authDomain: "ranking-ballot-angkasa-app.firebaseapp.com",
-  projectId: "ranking-ballot-angkasa-app",
-  storageBucket: "ranking-ballot-angkasa-app.firebasestorage.app",
-  messagingSenderId: "339138452646",
-  appId: "1:339138452646:web:b4dfe4f9da7b36481ca867"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0LcRmLgNiQKEXhTWJ8P_KU7AQhASGsMg",
+            authDomain: "ranking-ballot-angkasa-app.firebaseapp.com",
+            projectId: "ranking-ballot-angkasa-app",
+            storageBucket: "ranking-ballot-angkasa-app.firebasestorage.app",
+            messagingSenderId: "339138452646",
+            appId: "1:339138452646:web:b4dfe4f9da7b36481ca867"
+        };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const appId = "ranking-ballot-angkasa-app" ;
+        const appId = "ranking-ballot-angkasa-app"; // Pastikan ini sama dengan projectId Anda
 
         let currentUserId = null;
         let isAdminLoggedIn = false;
@@ -421,31 +441,6 @@
         // Variables for delete modal context
         let schoolToDeleteType = null;
         let schoolToDeleteId = null;
-
-        // Ensure user is authenticated to interact with Firestore
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUserId = user.uid;
-                document.getElementById('currentUserId').textContent = currentUserId;
-                console.log("Firebase authenticated with user ID:", currentUserId);
-                // Setup real-time listeners for ranking display
-                setupRankingListeners();
-            } else {
-                // If no user is signed in, sign in anonymously
-                try {
-                    if (typeof __initial_auth_token !== 'undefined') {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                        console.log("Signed in with custom token.");
-                    } else {
-                        await signInAnonymously(auth);
-                        console.log("Signed in anonymously.");
-                    }
-                } catch (error) {
-                    console.error("Error signing in:", error);
-                    showToast("Gagal melakukan autentikasi. Coba lagi.");
-                }
-            }
-        });
 
         // --- UI Element References ---
         const homePage = document.getElementById('homePage');
@@ -487,39 +482,39 @@
         const schoolSearchInput = document.getElementById('schoolSearch');
         const toastMessage = document.getElementById('toastMessage');
 
-        // Logout Modal Elements
+        // Modals
         const logoutModal = document.getElementById('logoutModal');
         const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
         const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
-
-        // Delete Modal Elements
         const deleteModal = document.getElementById('deleteModal');
         const deleteSchoolNameSpan = document.getElementById('deleteSchoolName');
         const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
         const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-
-        // Global Action Loading Overlay
         const actionLoadingOverlay = document.getElementById('actionLoadingOverlay');
+
+        // NEW: Announcement Modal Elements
+        const announcementModal = document.getElementById('announcementModal');
+        const closeAnnouncementBtn = document.getElementById('closeAnnouncementBtn');
+
 
         // --- Navigation Functions ---
         function showPage(pageToShow) {
+            // Hide all main pages
             homePage.classList.add('hidden');
             loginPage.classList.add('hidden');
             adminPage.classList.add('hidden');
             rankingPage.classList.add('hidden');
 
+            // Remove flex display from all pages to ensure correct hidden state
             homePage.classList.remove('flex');
             loginPage.classList.remove('flex');
             adminPage.classList.remove('flex', 'flex-col');
             rankingPage.classList.remove('flex', 'flex-col');
 
+            // Show the requested page and add flex display if needed
             pageToShow.classList.remove('hidden');
-            if (pageToShow === homePage || pageToShow === loginPage) {
+            if (pageToShow === homePage || pageToShow === loginPage || pageToShow === adminPage || pageToShow === rankingPage) {
                 pageToShow.classList.add('flex', 'flex-col');
-            } else if (pageToShow === adminPage) {
-                 pageToShow.classList.add('flex', 'flex-col'); // adminPage itself is a flex container
-            } else if (pageToShow === rankingPage) {
-                 pageToShow.classList.add('flex', 'flex-col'); // rankingPage itself is a flex container
             }
         }
 
@@ -787,9 +782,9 @@
 
                 // Update 'Diperbarui pada' timestamp for admin tables
                 if (collectionName === 'smp_mts_schools') {
-                    smpAdminLastUpdated.textContent = `Diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
+                    smpAdminLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
                 } else if (collectionName === 'sma_smk_ma_schools') {
-                    smaAdminLastUpdated.textContent = `Diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
+                    smaAdminLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
                 }
 
                 // Add event listeners for edit and delete buttons
@@ -927,8 +922,37 @@
             rankingContent.classList.remove('hidden');
         }
 
-        // Initial page load
-        showPage(homePage);
+        // Ensure user is authenticated to interact with Firestore
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                document.getElementById('currentUserId').textContent = currentUserId;
+                console.log("Firebase authenticated with user ID:", currentUserId);
+                // Setup real-time listeners for ranking display
+                setupRankingListeners();
+            } else {
+                // If no user is signed in, sign in anonymously
+                try {
+                    // Because this is on GitHub Pages, __initial_auth_token will not exist.
+                    // Directly attempt signInAnonymously().
+                    await signInAnonymously(auth);
+                    console.log("Signed in anonymously.");
+                } catch (error) {
+                    console.error("Error signing in:", error);
+                    showToast("Failed to authenticate. Please try again.");
+                }
+            }
+        });
+
+        // NEW: Event listener for closing the announcement modal
+        closeAnnouncementBtn.addEventListener('click', () => {
+            announcementModal.classList.add('hidden'); // Hide the announcement modal
+            showPage(homePage); // Show the home page
+        });
+
+        // Initial page load: Show announcement modal first
+        // homePage.classList.add('hidden'); // Ensure homepage is hidden by default (opsional, sudah dihandle oleh showPage)
+        announcementModal.classList.remove('hidden'); // Make sure announcement modal is visible
 
         // Ensure header takes up space (for min-h-screen-minus-header)
         document.addEventListener('DOMContentLoaded', () => {
