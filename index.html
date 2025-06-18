@@ -220,8 +220,8 @@
             <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
                 <h3 class="text-2xl font-bold mb-6 text-center text-indigo-700">Login Admin</h3>
                 <div class="mb-4">
-                    <label for="username" class="block text-gray-700 text-sm font-semibold mb-2">Username:</label>
-                    <input type="text" id="username" class="form-input" placeholder="Masukkan Username">
+                    <label for="username" class="block text-gray-700 text-sm font-semibold mb-2">Username Admin:</label>
+                    <input type="text" id="username" class="form-input" placeholder="Masukkan Username Admin Anda (Email)">
                 </div>
                 <div class="mb-6">
                     <label for="password" class="block text-gray-700 text-sm font-semibold mb-2">Password:</label>
@@ -236,7 +236,7 @@
         <!-- Admin Page (Input Forms) -->
         <div id="adminPage" class="hidden">
             <h3 class="text-2xl font-bold mb-6 text-center text-indigo-700">Input Data Sekolah</h3>
-            <p class="text-sm text-gray-600 mb-4 text-center">User ID Anda: <span id="currentUserId" class="font-mono text-indigo-600"></span></p>
+            <!-- Baris User ID dihapus dari tampilan di sini -->
             <div class="flex flex-col md:flex-row gap-6">
                 <!-- SMP/MTs Input -->
                 <div class="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-md">
@@ -402,7 +402,7 @@
 
     <!-- Announcement Modal (NEW FEATURE) -->
     <div id="announcementModal" class="modal-overlay">
-        <div class="modal-content w-full max-w-sm p-6 bg-white rounded-xl shadow-lg"> <!-- Added bg-white, rounded-xl, shadow-lg here -->
+        <div class="modal-content w-full max-w-sm p-6 bg-white rounded-xl shadow-lg">
             <h4 class="text-2xl font-bold text-indigo-700 mb-4">Informasi</h4>
             <p class="text-lg text-gray-700 mb-6">
                 Halo Guys! Selamat datang di Web Ranking Ballot LKBB ANGKASA Season 2 :D<br>Pemeringkatan hasil ballot akan segera dilakukan pada hari Sabtu, 21 Juni 2025. Pantengin terus, ya! XD
@@ -414,7 +414,8 @@
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+        // Diperbarui: Tambahkan signInWithEmailAndPassword dan signOut
+        import { getAuth, signInAnonymously, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
         import { getFirestore, collection, setDoc, doc, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
         // Firebase configuration and initialization
@@ -430,6 +431,10 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         const appId = "ranking-ballot-angkasa-app"; // Pastikan ini sama dengan projectId Anda
+
+        // >>>>>> PENTING: GANTI DENGAN ARRAY UID ADMIN ANDA DARI FIREBASE CONSOLE! <<<<<<
+        // Contoh: const ADMIN_UIDS = 'C6rp08brTBPTUE65TFWJmdfuHo83' ;
+        const ADMIN_UIDS = ["PASTE_UID_ADMIN_ANDA_DI_SINI"]; // GANTI DENGAN ARRAY UID ADMIN ASLI!
 
         let currentUserId = null;
         let isAdminLoggedIn = false;
@@ -456,7 +461,7 @@
         const backToHomeFromRanking = document.getElementById('backToHomeFromRanking');
         const logoutBtn = document.getElementById('logoutBtn');
 
-        const usernameInput = document.getElementById('username');
+        const usernameInput = document.getElementById('username'); // Digunakan untuk email admin
         const passwordInput = document.getElementById('password');
         const submitLoginBtn = document.getElementById('submitLoginBtn');
         const loginError = document.getElementById('loginError');
@@ -491,7 +496,7 @@
         const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
         const actionLoadingOverlay = document.getElementById('actionLoadingOverlay');
 
-        // NEW: Announcement Modal Elements
+        // Announcement Modal Elements
         const announcementModal = document.getElementById('announcementModal');
         const closeAnnouncementBtn = document.getElementById('closeAnnouncementBtn');
 
@@ -588,27 +593,28 @@
             }, 1000); // 1 second loading animation
         });
 
+        // Diperbarui: Logika loginBtn untuk langsung ke halaman admin jika sudah login
         loginBtn.addEventListener('click', () => {
             if (isAdminLoggedIn) {
                 showPage(adminPage);
-                // Re-fetch admin data to ensure it's up-to-date (though onSnapshot handles this too)
+                // Muat ulang data admin saat masuk halaman (real-time listener yang menangani)
                 fetchAndDisplayAdminData('smp_mts_schools', smpTableBody);
                 fetchAndDisplayAdminData('sma_smk_ma_schools', smaTableBody);
             } else {
                 showPage(loginPage);
-                loginError.classList.add('hidden'); // Hide previous errors
-                usernameInput.value = '';
+                loginError.classList.add('hidden'); // Sembunyikan pesan error sebelumnya
+                usernameInput.value = ''; // Kosongkan input
                 passwordInput.value = '';
             }
         });
 
         backToHomeFromLogin.addEventListener('click', () => showPage(homePage));
         backToHomeFromAdmin.addEventListener('click', () => {
-            // isAdminLoggedIn is NOT reset here, allowing persistent admin access
+            // isAdminLoggedIn tidak direset di sini, memungkinkan akses admin yang persisten
             showPage(homePage);
         });
         backToHomeFromRanking.addEventListener('click', () => {
-            currentSearchQuery = ''; // Clear search when leaving ranking page
+            currentSearchQuery = ''; // Bersihkan pencarian saat meninggalkan halaman ranking
             schoolSearchInput.value = '';
             showPage(homePage);
         });
@@ -617,11 +623,21 @@
             showLogoutModal();
         });
 
-        confirmLogoutBtn.addEventListener('click', () => {
-            isAdminLoggedIn = false;
-            hideLogoutModal();
-            showPage(homePage);
-            showToast("Berhasil logout.");
+        // Diperbarui: Logout menggunakan Firebase signOut()
+        confirmLogoutBtn.addEventListener('click', async () => {
+            showActionLoading();
+            try {
+                await signOut(auth); // Melakukan logout dari Firebase Authentication
+                isAdminLoggedIn = false; // Set status login admin menjadi false
+                hideLogoutModal();
+                showPage(homePage);
+                showToast("Berhasil logout.");
+            } catch (error) {
+                console.error("Error logging out:", error);
+                showToast("Gagal logout. Coba lagi.");
+            } finally {
+                hideActionLoading();
+            }
         });
 
         cancelLogoutBtn.addEventListener('click', () => {
@@ -642,25 +658,41 @@
             hideDeleteModal();
         });
 
-
+        // Diperbarui: Menggunakan Firebase Email/Password Authentication
         submitLoginBtn.addEventListener('click', async () => {
-            showActionLoading(); // Show global loading for login action
-            const username = usernameInput.value;
+            showActionLoading(); // Tampilkan loading
+            const email = usernameInput.value; // Nilai dari input "Username Admin" adalah email
             const password = passwordInput.value;
 
-            // Hardcoded credentials
-            if (username === 'zenobiagiven' && password === 'passmabajaya') {
-                isAdminLoggedIn = true;
-                showPage(adminPage);
-                loginError.classList.add('hidden');
-                fetchAndDisplayAdminData('smp_mts_schools', smpTableBody);
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                // Jika login berhasil, userCredential.user akan berisi objek pengguna
+                console.log("Login berhasil! UID:", userCredential.user.uid);
+                
+                // Diperbarui: Cek apakah UID yang login termasuk dalam daftar ADMIN_UIDS
+                isAdminLoggedIn = ADMIN_UIDS.includes(userCredential.user.uid);
+                
+                // Jika login berhasil tapi UID bukan admin, tetap beri tahu
+                if (!isAdminLoggedIn) {
+                    showToast("Login berhasil, tetapi Anda bukan admin yang terdaftar.");
+                    // Opsional: langsung log out user non-admin yang mencoba login
+                    await signOut(auth); 
+                    showPage(homePage); // Kembali ke homepage
+                    return; // Hentikan eksekusi lebih lanjut
+                }
+
+                showPage(adminPage); // Pindah ke halaman admin
+                loginError.classList.add('hidden'); // Sembunyikan error
+                fetchAndDisplayAdminData('smp_mts_schools', smpTableBody); // Muat data admin
                 fetchAndDisplayAdminData('sma_smk_ma_schools', smaTableBody);
-                showToast("Login Berhasil!");
-            } else {
-                loginError.classList.remove('hidden');
-                showToast("Username atau password salah!");
+                showToast("Login Admin Berhasil!");
+            } catch (error) {
+                console.error("Login gagal:", error.code, error.message);
+                loginError.classList.remove('hidden'); // Tampilkan pesan error
+                showToast("Login gagal. Username atau password salah!"); // Pesan tetap "Username"
+            } finally {
+                hideActionLoading(); // Sembunyikan loading
             }
-            hideActionLoading(); // Hide global loading after login attempt
         });
 
         schoolSearchInput.addEventListener('input', (e) => {
@@ -671,8 +703,9 @@
         // --- Firestore Operations (Admin) ---
 
         async function addSchool(type, name, points) {
-            if (!isAdminLoggedIn) {
-                showToast("Anda tidak memiliki izin untuk menambah data.");
+            // Lapisan UI: Cek apakah admin sudah login dan UID-nya ada di daftar ADMIN_UIDS
+            if (!isAdminLoggedIn || !ADMIN_UIDS.includes(currentUserId)) {
+                showToast("Anda tidak memiliki izin untuk menambah data. Silakan login sebagai admin.");
                 return;
             }
             if (!name || isNaN(points) || points === '') {
@@ -689,18 +722,18 @@
                 return;
             }
 
-            showActionLoading(); // Show global loading for add/update action
+            showActionLoading(); // Tampilkan loading
             const collectionPath = `artifacts/${appId}/public/data/${type}`;
-            const schoolRef = doc(db, collectionPath, name.trim()); // Use school name as document ID
+            const schoolRef = doc(db, collectionPath, name.trim()); // Gunakan nama sekolah sebagai ID dokumen
 
             try {
                 await setDoc(schoolRef, {
                     name: name.trim(),
                     points: parsedPoints,
-                    lastUpdated: new Date() // Set current timestamp
-                }, { merge: true }); // Use merge to update if exists, create if not
+                    lastUpdated: new Date() // Set timestamp saat ini
+                }, { merge: true }); // Gunakan merge untuk update jika sudah ada, buat jika belum ada
                 showToast(`Data ${name.trim()} berhasil ditambahkan/diperbarui.`);
-                // Clear inputs after successful add/update
+                // Kosongkan input setelah berhasil
                 if (type === 'smp_mts_schools') {
                     smpNameInput.value = '';
                     smpPointsInput.value = '';
@@ -710,14 +743,19 @@
                 }
             } catch (e) {
                 console.error("Error adding document: ", e);
-                showToast("Gagal menambahkan/memperbarui data. Coba lagi.");
+                showToast("Gagal menambahkan/memperbarui data. Periksa izin Anda.");
             } finally {
-                hideActionLoading(); // Hide global loading
+                hideActionLoading(); // Sembunyikan loading
             }
         }
 
-        // This function is now only called after confirmation from the modal
+        // Fungsi ini sekarang dipanggil setelah konfirmasi dari modal
         async function executeDeleteSchool(type, docId) {
+            // Lapisan UI: Cek apakah admin sudah login dan UID-nya ada di daftar ADMIN_UIDS
+            if (!isAdminLoggedIn || !ADMIN_UIDS.includes(currentUserId)) {
+                showToast("Anda tidak memiliki izin untuk menghapus data. Silakan login sebagai admin.");
+                return;
+            }
             if (currentUserId === null) {
                 showToast("Autentikasi belum siap. Coba lagi.");
                 return;
@@ -729,7 +767,7 @@
                 showToast(`Data ${docId} berhasil dihapus.`);
             } catch (e) {
                 console.error("Error removing document: ", e);
-                showToast("Gagal menghapus data. Coba lagi.");
+                showToast("Gagal menghapus data. Periksa izin Anda.");
             }
         }
 
@@ -737,6 +775,11 @@
         function fetchAndDisplayAdminData(collectionName, tableBodyElement) {
             if (currentUserId === null) {
                 console.log("Firebase not yet authenticated for admin data fetch.");
+                return;
+            }
+            // Hanya muat data admin jika sudah login sebagai admin dan UID-nya ada di daftar ADMIN_UIDS
+            if (!isAdminLoggedIn || !ADMIN_UIDS.includes(currentUserId)) {
+                tableBodyElement.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Anda tidak memiliki izin untuk melihat data ini.</td></tr>`;
                 return;
             }
 
@@ -752,13 +795,13 @@
                     }
                 });
 
-                // Sort by name for consistent display in admin panel
+                // Urutkan berdasarkan nama untuk tampilan yang konsisten di panel admin
                 schools.sort((a, b) => a.name.localeCompare(b.name));
 
                 tableBodyElement.innerHTML = '';
                 if (schools.length === 0) {
                     tableBodyElement.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Belum ada data sekolah.</td></tr>`;
-                    // Update timestamp to 'No Data' or empty
+                    // Perbarui timestamp ke 'No Data' atau kosong
                     if (collectionName === 'smp_mts_schools') {
                         smpAdminLastUpdated.textContent = 'Diperbarui pada: -';
                     } else if (collectionName === 'sma_smk_ma_schools') {
@@ -779,14 +822,14 @@
                     `;
                 });
 
-                // Update 'Diperbarui pada' timestamp for admin tables
+                // Perbarui 'Diperbarui pada' timestamp untuk tabel admin
                 if (collectionName === 'smp_mts_schools') {
                     smpAdminLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
                 } else if (collectionName === 'sma_smk_ma_schools') {
                     smaAdminLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
                 }
 
-                // Add event listeners for edit and delete buttons
+                // Tambahkan event listener untuk tombol edit dan delete
                 tableBodyElement.querySelectorAll('.edit-btn').forEach(button => {
                     button.addEventListener('click', (e) => {
                         const id = e.target.dataset.id;
@@ -806,11 +849,11 @@
                     });
                 });
 
-                // Changed logic to show custom delete modal
+                // Mengubah logika untuk menampilkan modal delete kustom
                 tableBodyElement.querySelectorAll('.delete-btn').forEach(button => {
                     button.addEventListener('click', (e) => {
                         const id = e.target.dataset.id;
-                        const name = e.target.dataset.name; // Get school name for the modal
+                        const name = e.target.dataset.name; // Dapatkan nama sekolah untuk modal
                         showDeleteModal(name, collectionName, id);
                     });
                 });
@@ -831,15 +874,19 @@
 
         // --- Ranking Display (Real-time with onSnapshot) ---
 
-        // Set up one-time listeners for real-time updates to rankings
+        // Siapkan listener satu kali untuk pembaruan ranking real-time
         function setupRankingListeners() {
-            if (currentUserId === null) return; // Wait for authentication
+            if (currentUserId === null) return; // Tunggu otentikasi
+            
+            // Atur isAdminLoggedIn berdasarkan UID yang sedang login.
+            // Ini dipanggil setiap kali status autentikasi berubah.
+            isAdminLoggedIn = ADMIN_UIDS.includes(currentUserId); 
 
             const smpQuery = collection(db, `artifacts/${appId}/public/data/smp_mts_schools`);
             const smaQuery = collection(db, `artifacts/${appId}/public/data/sma_smk_ma_schools`);
 
             onSnapshot(smpQuery, (snapshot) => {
-                smpSchoolsData = []; // Clear previous data
+                smpSchoolsData = []; // Bersihkan data sebelumnya
                 let latestUpdateTimestamp = null;
                 snapshot.forEach((doc) => {
                     const data = doc.data();
@@ -849,14 +896,14 @@
                     }
                 });
                 smpRankingLastUpdated.textContent = `Diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
-                renderFilteredRankings(); // Re-render both tables with potentially new data
+                renderFilteredRankings(); // Render ulang kedua tabel dengan data potensial baru
             }, (error) => {
                 console.error("Error listening to SMP/MTs ranking:", error);
                 showToast("Gagal memuat ranking SMP/MTs.");
             });
 
             onSnapshot(smaQuery, (snapshot) => {
-                smaSchoolsData = []; // Clear previous data
+                smaSchoolsData = []; // Bersihkan data sebelumnya
                 let latestUpdateTimestamp = null;
                 snapshot.forEach((doc) => {
                     const data = doc.data();
@@ -866,7 +913,7 @@
                     }
                 });
                 smaRankingLastUpdated.textContent = `Diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
-                renderFilteredRankings(); // Re-render both tables with potentially new data
+                renderFilteredRankings(); // Render ulang kedua tabel dengan data potensial baru
             }, (error) => {
                 console.error("Error listening to SMA/SMK/MA ranking:", error);
                 showToast("Gagal memuat ranking SMA/SMK/MA.");
@@ -875,7 +922,7 @@
 
 
         function renderFilteredRankings() {
-            // Apply search filter
+            // Terapkan filter pencarian
             const filteredSmp = smpSchoolsData.filter(school =>
                 school.name.toLowerCase().includes(currentSearchQuery.toLowerCase())
             );
@@ -883,19 +930,19 @@
                 school.name.toLowerCase().includes(currentSearchQuery.toLowerCase())
             );
 
-            // Sort by points descending
+            // Urutkan berdasarkan poin descending
             filteredSmp.sort((a, b) => b.points - a.points);
             filteredSma.sort((a, b) => b.points - a.points);
 
             renderRankingTable(filteredSmp, displaySmpRanking);
             renderRankingTable(filteredSma, displaySmaRanking);
 
-            // Hide loading after initial render if it's still visible
+            // Sembunyikan loading setelah render awal jika masih terlihat
             hideLoadingAndShowContent();
         }
 
         function renderRankingTable(schools, tableBodyElement) {
-            tableBodyElement.innerHTML = ''; // Clear previous entries
+            tableBodyElement.innerHTML = ''; // Bersihkan entri sebelumnya
             if (schools.length === 0) {
                 tableBodyElement.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Belum ada data ranking.</td></tr>`;
                 return;
@@ -904,8 +951,8 @@
             schools.forEach((school, index) => {
                 const row = tableBodyElement.insertRow();
                 row.classList.add('ranking-item');
-                // Apply 'top-rank' class if it's the highest ranked school
-                if (index === 0 && schools[0].points > 0) { // Only highlight if there are points
+                // Terapkan kelas 'top-rank' jika itu sekolah peringkat tertinggi
+                if (index === 0 && schools[0].points > 0) { // Hanya sorot jika ada poin
                     row.classList.add('top-rank');
                 }
                 row.innerHTML = `
@@ -921,39 +968,43 @@
             rankingContent.classList.remove('hidden');
         }
 
-        // Ensure user is authenticated to interact with Firestore
+        // Autentikasi Firebase pertama kali saat aplikasi dimuat
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserId = user.uid;
-                document.getElementById('currentUserId').textContent = currentUserId;
+                // Baris ini dihapus: document.getElementById('currentUserId').textContent = currentUserId;
                 console.log("Firebase authenticated with user ID:", currentUserId);
-                // Setup real-time listeners for ranking display
-                setupRankingListeners();
+                
+                // Set isAdminLoggedIn berdasarkan UID yang login.
+                // Ini penting agar fetchAndDisplayAdminData tidak mencoba fetch sebelum user terautentikasi dan isAdminLoggedIn terdefinisi.
+                isAdminLoggedIn = ADMIN_UIDS.includes(currentUserId);
+                
+                setupRankingListeners(); // Ini akan memicu listener data
             } else {
-                // If no user is signed in, sign in anonymously
+                // Jika tidak ada user yang login, coba login secara anonim
                 try {
-                    // Because this is on GitHub Pages, __initial_auth_token will not exist.
-                    // Directly attempt signInAnonymously().
+                    // Hanya panggil signInAnonymously() jika belum ada user yang login
+                    // __initial_auth_token tidak digunakan di GitHub Pages
                     await signInAnonymously(auth);
                     console.log("Signed in anonymously.");
                 } catch (error) {
-                    console.error("Error signing in:", error);
-                    showToast("Failed to authenticate. Please try again.");
+                    console.error("Error signing in anonymously:", error);
+                    showToast("Gagal melakukan autentikasi anonim. Coba lagi.");
                 }
             }
         });
 
-        // NEW: Event listener for closing the announcement modal
+        // Event listener untuk menutup modal pengumuman
         closeAnnouncementBtn.addEventListener('click', () => {
-            announcementModal.classList.add('hidden'); // Hide the announcement modal
-            showPage(homePage); // Show the home page
+            announcementModal.classList.add('hidden'); // Sembunyikan modal pengumuman
+            showPage(homePage); // Tampilkan halaman beranda
         });
 
-        // Initial page load: Show announcement modal first
-        // homePage.classList.add('hidden'); // Ensure homepage is hidden by default (opsional, sudah dihandle oleh showPage)
-        announcementModal.classList.remove('hidden'); // Make sure announcement modal is visible
+        // Pemuatan halaman awal: Tampilkan modal pengumuman terlebih dahulu
+        // homePage.classList.add('hidden'); // Pastikan homepage tersembunyi secara default (opsional, sudah dihandle oleh showPage)
+        announcementModal.classList.remove('hidden'); // Pastikan modal pengumuman terlihat
 
-        // Ensure header takes up space (for min-h-screen-minus-header)
+        // Pastikan header mengambil ruang (untuk min-h-screen-minus-header)
         document.addEventListener('DOMContentLoaded', () => {
             const headerHeight = document.querySelector('.header').offsetHeight;
             document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
