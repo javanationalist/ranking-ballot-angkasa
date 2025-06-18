@@ -399,11 +399,18 @@
         import { getFirestore, collection, setDoc, doc, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
         // Firebase configuration and initialization
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const firebaseConfig = const firebaseConfig = {
+  apiKey: "AIzaSyC0LcRmLgNiQKEXhTWJ8P_KU7AQhASGsMg",
+  authDomain: "ranking-ballot-angkasa-app.firebaseapp.com",
+  projectId: "ranking-ballot-angkasa-app",
+  storageBucket: "ranking-ballot-angkasa-app.firebasestorage.app",
+  messagingSenderId: "339138452646",
+  appId: "1:339138452646:web:b4dfe4f9da7b36481ca867"
+};
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const appId = "ranking-ballot-angkasa-app" ;
 
         let currentUserId = null;
         let isAdminLoggedIn = false;
