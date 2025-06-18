@@ -183,13 +183,13 @@
     <header class="header">
         <h1 class="text-3xl font-extrabold mb-1">Ranking Ballot</h1>
         <h2 class="text-xl font-semibold mb-1">LKBB ANGKASA Season 2</h2>
-        <p class="text-lg font-medium">21 JUNI 2025</p>
+        <p class="text-lg font-medium">SMA NEGERI 1 BANGSAL</p>
     </header>
 
     <div class="container">
         <!-- Homepage -->
         <div id="homePage" class="flex flex-col items-center justify-center min-h-screen-minus-header">
-            <h3 class="text-2xl font-bold mb-8 text-center">Selamat Datang<br>Silakan pilih tindakan</h3>
+            <h3 class="text-2xl font-bold mb-8 text-center">Selamat Datang!<br>Silakan Pilih Tindakan</h3>
             <div class="space-y-4">
                 <button id="viewBallotBtn" class="btn btn-primary w-full md:w-auto">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -233,7 +233,7 @@
                 <!-- SMP/MTs Input -->
                 <div class="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-md">
                     <h4 class="text-xl font-semibold mb-4 text-center text-emerald-700">Tingkat SMP/MTs</h4>
-                    <p id="smpAdminLastUpdated" class="text-xs text-gray-500 mt-2 text-right">Diperbarui pada: -</p>
+                    <p id="smpAdminLastUpdated" class="text-xs text-gray-500 mt-2 text-right">Poin diperbarui pada: -</p>
                     <div class="mb-4">
                         <label for="smpName" class="block text-gray-700 text-sm font-semibold mb-2">Nama Sekolah:</label>
                         <input type="text" id="smpName" class="form-input" placeholder="Contoh: SMPN 1 Jakarta">
@@ -263,7 +263,7 @@
                 <!-- SMA/SMK/MA Input -->
                 <div class="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-md">
                     <h4 class="text-xl font-semibold mb-4 text-center text-orange-700">Tingkat SMA/SMK/MA</h4>
-                    <p id="smaAdminLastUpdated" class="text-xs text-gray-500 mt-2 text-right">Diperbarui pada: -</p>
+                    <p id="smaAdminLastUpdated" class="text-xs text-gray-500 mt-2 text-right">Poin diperbarui pada: -</p>
                     <div class="mb-4">
                         <label for="smaName" class="block text-gray-700 text-sm font-semibold mb-2">Nama Sekolah:</label>
                         <input type="text" id="smaName" class="form-input" placeholder="Contoh: SMAN 8 Bandung">
@@ -303,25 +303,25 @@
         <div id="rankingPage" class="hidden flex flex-col items-center justify-center min-h-screen-minus-header">
             <div id="loadingAnimation" class="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-lg">
                 <div class="loading-spinner mb-4"></div>
-                <p class="text-lg font-medium text-gray-700">Memuat Ranking...</p>
+                <p class="text-lg font-medium text-gray-700">Memuat Poin...</p>
             </div>
 
             <div id="rankingContent" class="hidden w-full">
-                <h3 class="text-2xl font-bold mb-6 text-center text-indigo-700">Tampilan Ranking</h3>
+                <h3 class="text-2xl font-bold mb-6 text-center text-indigo-700">Hasil Perolehan Ballot</h3>
                 <div class="mb-4 w-full max-w-md mx-auto">
-                    <label for="schoolSearch" class="sr-only">Cari Sekolah</label>
+                    <label for="schoolSearch" class="sr-only">Cari</label>
                     <input type="text" id="schoolSearch" class="form-input" placeholder="Cari nama sekolah...">
                 </div>
                 <div class="flex flex-col md:flex-row gap-6 w-full">
                     <!-- SMP/MTs Ranking Display -->
                     <div class="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-md">
                         <h4 class="text-xl font-semibold mb-4 text-center text-emerald-700">Ranking SMP/MTs</h4>
-                        <p id="smpRankingLastUpdated" class="text-xs text-gray-500 mt-2 text-right">Diperbarui pada: -</p>
+                        <p id="smpRankingLastUpdated" class="text-xs text-gray-500 mt-2 text-right">Poin telah diperbarui pada: -</p>
                         <div class="table-container">
                             <table class="min-w-full bg-white rounded-lg shadow">
                                 <thead>
                                     <tr>
-                                        <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">Peringkat</th>
+                                        <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">Nomor</th>
                                         <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider">Nama Sekolah</th>
                                         <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tr-lg">Poin</th>
                                     </tr>
@@ -336,12 +336,12 @@
                     <!-- SMA/SMK/MA Ranking Display -->
                     <div class="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-md">
                         <h4 class="text-xl font-semibold mb-4 text-center text-orange-700">Ranking SMA/SMK/MA</h4>
-                        <p id="smaRankingLastUpdated" class="text-xs text-gray-500 mt-2 text-right">Diperbarui pada: -</p>
+                        <p id="smaRankingLastUpdated" class="text-xs text-gray-500 mt-2 text-right">Poin telah diperbarui pada: -</p>
                         <div class="table-container">
                             <table class="min-w-full bg-white rounded-lg shadow">
                                 <thead>
                                     <tr>
-                                        <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">Peringkat</th>
+                                        <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">Nomor</th>
                                         <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider">Nama Sekolah</th>
                                         <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tr-lg">Poin</th>
                                     </tr>
