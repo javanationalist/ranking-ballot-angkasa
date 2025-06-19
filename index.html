@@ -662,9 +662,7 @@
         // Admin Hub Buttons
         const goToBallotInputBtn = document.getElementById('goToBallotInputBtn');
         const goToAnnouncementManagementBtn = document.getElementById('goToAnnouncementManagementBtn');
-        // const backToAdminHubBtn = document.getElementById('backToAdminHubBtn'); // Renamed for clarity in sub-pages
-        // const backToAdminHubFromAnnouncementBtn = document.getElementById('backToAdminHubFromAnnouncementBtn'); // Renamed for clarity in sub-pages
-
+        
         // NEW: Back to Home Button from Admin Hub
         const backToHomeFromAdminHubBtn = document.getElementById('backToHomeFromAdminHubBtn');
 
@@ -740,6 +738,11 @@
         // Default announcement content for user-facing modal
         const defaultAnnouncementHeading = "Informasi";
         const defaultAnnouncementContent = "Halo Guys! Selamat datang di Web Ranking Ballot LKBB ANGKASA Season 2 :D<br>Hasil ballot akan segera diperbarui oleh admin. Kamu bisa melihat kapan poin diperbarui.<br>Pantengin terus, ya! XD";
+
+        // Previous state for user-facing announcement to trigger re-pop
+        let previousUserAnnouncementHeading = "";
+        let previousUserAnnouncementContentRaw = ""; // Store raw for comparison
+        let previousUserAnnouncementIsActive = false; // True if it was displaying an admin-published announcement
 
 
         // --- Navigation Functions ---
@@ -909,14 +912,14 @@
             showPage(homePage);
         });
 
-        // NEW: Back to Admin Hub buttons on sub-pages
+        // Back to Admin Hub buttons on sub-pages
         backToAdminHubFromBallotBtn.addEventListener('click', () => showPage(adminPage));
         backToAdminHubFromAnnouncementBtn.addEventListener('click', () => showPage(adminPage));
 
-        // NEW: Back to Home button on main Admin Hub
+        // Back to Home button on main Admin Hub
         backToHomeFromAdminHubBtn.addEventListener('click', () => showPage(homePage));
 
-        // NEW: Logout buttons on sub-pages (all trigger the same logout flow)
+        // Logout buttons (all trigger the same logout flow)
         logoutBtn.addEventListener('click', () => showLogoutModal()); // Main admin hub logout
         logoutFromBallotBtn.addEventListener('click', () => showLogoutModal());
         logoutFromAnnouncementBtn.addEventListener('click', () => showLogoutModal());
@@ -1441,15 +1444,16 @@
             const smaQuery = collection(db, `artifacts/${appId}/public/data/sma_smk_ma_schools`);
 
             onSnapshot(smpQuery, (snapshot) => {
-                smpSchoolsData = [];
+                const schools = []; // Define schools locally within the callback
                 let latestUpdateTimestamp = null;
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    smpSchoolsData.push({ id: doc.id, ...data });
+                    schools.push({ id: doc.id, ...data });
                     if (data.lastUpdated && (!latestUpdateTimestamp || data.lastUpdated.toDate() > latestUpdateTimestamp.toDate())) {
                         latestUpdateTimestamp = data.lastUpdated;
                     }
                 });
+                smpSchoolsData = schools; // Assign to global variable
                 smpRankingLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
                 renderFilteredRankings();
             }, (error) => {
@@ -1458,15 +1462,16 @@
             });
 
             onSnapshot(smaQuery, (snapshot) => {
-                smaSchoolsData = [];
+                const schools = []; // Define schools locally within the callback
                 let latestUpdateTimestamp = null;
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    smaSchoolsData.push({ id: doc.id, ...data });
+                    schools.push({ id: doc.id, ...data });
                     if (data.lastUpdated && (!latestUpdateTimestamp || data.lastUpdated.toDate() > latestUpdateTimestamp.toDate())) {
                         latestUpdateTimestamp = data.lastUpdated;
                     }
                 });
+                smaSchoolsData = schools; // Assign to global variable
                 smaRankingLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
                 renderFilteredRankings();
             }, (error) => {
@@ -1523,40 +1528,70 @@
         function setupUserAnnouncementListener() {
             const announcementDocRef = doc(db, `artifacts/${appId}/public/data/announcements`, 'mainAnnouncement');
             onSnapshot(announcementDocRef, (docSnap) => {
+                let newHeading = defaultAnnouncementHeading;
+                let newContentRaw = defaultAnnouncementContent; // Store raw for comparison
+                let newTimestampText = "";
+                let newTimestampVisible = false;
+                let newIsActive = false; // True if displaying an admin-published announcement
+
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     const publishTime = data.publishAt ? data.publishAt.toDate() : null;
                     const now = new Date();
 
-                    // Logic: display real-time announcement ONLY if it's published now or its scheduled time has passed
-                    if (publishTime && publishTime.getTime() > now.getTime()) {
-                        // Announcement is scheduled for future, show default message
-                        userAnnouncementHeading.textContent = defaultAnnouncementHeading;
-                        userAnnouncementContent.innerHTML = defaultAnnouncementContent;
-                        userAnnouncementTimestamp.classList.add('hidden');
-                    } else {
-                        // Announcement is published (either now or scheduled time passed)
-                        userAnnouncementHeading.textContent = data.heading || defaultAnnouncementHeading;
-                        userAnnouncementContent.innerHTML = (data.content || defaultAnnouncementContent).replace(/\n/g, '<br>');
+                    if (publishTime && publishTime.getTime() <= now.getTime()) { // Is published
+                        newHeading = data.heading || defaultAnnouncementHeading;
+                        newContentRaw = data.content || defaultAnnouncementContent;
                         if (data.showTimestamp && data.publishAt) {
-                            userAnnouncementTimestamp.textContent = `Disiarkan pada: ${formatTimestamp(data.publishAt)}`;
-                            userAnnouncementTimestamp.classList.remove('hidden');
-                        } else {
-                            userAnnouncementTimestamp.classList.add('hidden');
+                            newTimestampText = `Disiarkan pada: ${formatTimestamp(data.publishAt)}`;
+                            newTimestampVisible = true;
                         }
+                        newIsActive = true;
                     }
+                    // If scheduled for future, it remains default content (newIsActive remains false)
+                }
+                // If docSnap doesn't exist, it remains default content (newIsActive remains false)
+
+                // Update the user-facing modal elements
+                userAnnouncementHeading.textContent = newHeading;
+                userAnnouncementContent.innerHTML = newContentRaw.replace(/\n/g, '<br>'); // Render with <br> for display
+                userAnnouncementTimestamp.textContent = newTimestampText;
+                if (newTimestampVisible) {
+                    userAnnouncementTimestamp.classList.remove('hidden');
                 } else {
-                    // No announcement document, show default message
-                    userAnnouncementHeading.textContent = defaultAnnouncementHeading;
-                    userAnnouncementContent.innerHTML = defaultAnnouncementContent;
                     userAnnouncementTimestamp.classList.add('hidden');
                 }
+
+                // Now, decide whether to show the modal again if it's currently hidden
+                const isModalCurrentlyHidden = announcementModal.classList.contains('hidden');
+
+                // Check if the content has meaningfully changed (heading or raw content)
+                const contentChanged = (newHeading !== previousUserAnnouncementHeading) ||
+                                       (newContentRaw !== previousUserAnnouncementContentRaw);
+
+                // Check for state change (e.g., from scheduled/deleted to published)
+                const becameActive = newIsActive && !previousUserAnnouncementIsActive;
+                // Check for significant active content change
+                const activeContentChanged = newIsActive && previousUserAnnouncementIsActive && contentChanged;
+
+                if (isModalCurrentlyHidden && (becameActive || activeContentChanged)) {
+                    announcementModal.classList.remove('hidden');
+                }
+
+                // Update previous state for next comparison
+                previousUserAnnouncementHeading = newHeading;
+                previousUserAnnouncementContentRaw = newContentRaw;
+                previousUserAnnouncementIsActive = newIsActive;
             }, (error) => {
                 console.error("Error loading user announcement:", error);
-                // On error, revert to default message
+                // On error, revert to default message and ensure it's displayed if modal is open
                 userAnnouncementHeading.textContent = defaultAnnouncementHeading;
                 userAnnouncementContent.innerHTML = defaultAnnouncementContent;
                 userAnnouncementTimestamp.classList.add('hidden');
+                // Reset previous state on error
+                previousUserAnnouncementHeading = defaultAnnouncementHeading;
+                previousUserAnnouncementContentRaw = defaultAnnouncementContent;
+                previousUserAnnouncementIsActive = false;
             });
         }
 
@@ -1593,7 +1628,8 @@
 
         // Pemuatan halaman awal: Tampilkan modal pengumuman terlebih dahulu
         // Default content already there, setupUserAnnouncementListener will update it
-        announcementModal.classList.remove('hidden'); // Pastikan modal pengumuman terlihat
+        // The modal is initially shown, and setupUserAnnouncementListener updates its content.
+        announcementModal.classList.remove('hidden'); 
 
         // Pastikan header mengambil ruang (untuk min-h-screen-minus-header)
         document.addEventListener('DOMContentLoaded', () => {
@@ -1608,4 +1644,3 @@
     </script>
 </body>
 </html>
-
