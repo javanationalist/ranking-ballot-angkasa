@@ -305,6 +305,25 @@
                     </svg>
                     Siarkan Informasi
                 </button>
+                <!-- NEW: Display Control Section -->
+                <div class="w-full bg-white p-6 rounded-xl shadow-md text-center">
+                    <h4 class="text-xl font-semibold mb-4 text-indigo-700">Kontrol Tampilan Ranking</h4>
+                    <p id="displayStatus" class="text-lg font-bold mb-4">Status: Memuat...</p>
+                    <div class="flex justify-center space-x-4">
+                        <button id="activateDisplayBtn" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                            Aktifkan Display Ranking
+                        </button>
+                        <button id="deactivateDisplayBtn" class="btn btn-danger">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                            Nonaktifkan Display Ranking
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="flex flex-col md:flex-row gap-4 mt-8 w-full">
                 <button id="logoutBtn" class="btn btn-secondary w-full md:w-1/2">
@@ -375,7 +394,7 @@
                         <table class="min-w-full bg-white rounded-lg shadow">
                             <thead>
                                 <tr>
-                                    <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">Nama Sekolah</th>
+                                    <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">No</th>
                                     <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider">Poin</th>
                                     <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tr-lg">Aksi</th>
                                 </tr>
@@ -476,7 +495,7 @@
                             <button id="deleteCurrentAnnouncementBtn" class="btn btn-danger">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 000-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                </svg>
+                            </svg>
                                 Hapus
                             </button>
                         </div>
@@ -636,6 +655,7 @@
         let smaSchoolsData = []; // To store all SMA data from Firestore
         let currentSearchQuery = '';
         let currentAnnouncement = null; // To store the current active announcement
+        let displayRankingActive = true; // NEW: Global state for ranking display visibility
 
         // Variables for delete modal context
         let schoolToDeleteType = null;
@@ -743,6 +763,14 @@
         let previousUserAnnouncementHeading = "";
         let previousUserAnnouncementContentRaw = ""; // Store raw for comparison
         let previousUserAnnouncementIsActive = false; // True if it was displaying an admin-published announcement
+
+        // NEW: Display Control Elements
+        const displayStatus = document.getElementById('displayStatus');
+        const activateDisplayBtn = document.getElementById('activateDisplayBtn');
+        const deactivateDisplayBtn = document.getElementById('deactivateDisplayBtn');
+        
+        // Firestore document reference for app settings
+        const appSettingsDocRef = doc(db, `artifacts/${appId}/public/data/app_settings`, 'display_control');
 
 
         // --- Navigation Functions ---
@@ -871,12 +899,12 @@
         // --- Event Listeners ---
         viewBallotBtn.addEventListener('click', () => {
             showPage(rankingPage);
+            // The display of loading vs content is now handled within renderFilteredRankings
+            // to account for the displayActive status.
             loadingAnimation.classList.remove('hidden'); // Show ranking page specific loading
             rankingContent.classList.add('hidden');
-            setTimeout(() => {
-                renderFilteredRankings();
-                hideLoadingAndShowContent();
-            }, 1000);
+            // Ranking data will be rendered by the Firestore listeners via renderFilteredRankings
+            // which will also check displayActive status.
         });
 
         loginBtn.addEventListener('click', () => {
@@ -1455,7 +1483,7 @@
                 });
                 smpSchoolsData = schools; // Assign to global variable
                 smpRankingLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
-                renderFilteredRankings();
+                renderFilteredRankings(); // Re-render when SMP data changes
             }, (error) => {
                 console.error("Error listening to SMP/MTs ranking:", error);
                 showToast("Gagal memuat ranking SMP/MTs.");
@@ -1473,7 +1501,7 @@
                 });
                 smaSchoolsData = schools; // Assign to global variable
                 smaRankingLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
-                renderFilteredRankings();
+                renderFilteredRankings(); // Re-render when SMA data changes
             }, (error) => {
                 console.error("Error listening to SMA/SMK/MA ranking:", error);
                 showToast("Gagal memuat ranking SMA/SMK/MA.");
@@ -1482,6 +1510,23 @@
 
 
         function renderFilteredRankings() {
+            // First, update the "last updated" timestamps, regardless of display status
+            // These lines were moved inside the onSnapshot callbacks to ensure they update immediately
+            // when data changes, even if display is off.
+            // smpRankingLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
+            // smaRankingLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
+
+            if (!displayRankingActive && !isAdminLoggedIn) { // Only hide for non-admin if display is off
+                displaySmpRanking.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Data tidak tersedia saat ini.</td></tr>`;
+                displaySmaRanking.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Data tidak tersedia saat ini.</td></tr>`;
+                // Clear timestamps or set to a placeholder when display is off for public view
+                smpRankingLastUpdated.textContent = 'Poin sudah diperbarui pada: -';
+                smaRankingLastUpdated.textContent = 'Poin sudah diperbarui pada: -';
+
+                hideLoadingAndShowContent();
+                return;
+            }
+
             const filteredSmp = smpSchoolsData.filter(school =>
                 school.name.toLowerCase().includes(currentSearchQuery.toLowerCase())
             );
@@ -1601,6 +1646,68 @@
             });
         }
 
+        // NEW: Function to update display status in Firestore
+        async function updateDisplayStatus(isActive) {
+            if (!isAdminLoggedIn || !ADMIN_UIDS.includes(currentUserId)) {
+                showToast("Anda tidak memiliki izin untuk mengubah status display.");
+                return;
+            }
+            showActionLoading("Memperbarui status display...");
+            try {
+                await setDoc(appSettingsDocRef, { displayActive: isActive }, { merge: true });
+                showToast(`Display ranking berhasil ${isActive ? 'diaktifkan' : 'dinonaktifkan'}.`);
+            } catch (error) {
+                console.error("Error updating display status:", error);
+                showToast("Gagal memperbarui status display. Coba lagi.");
+            } finally {
+                hideActionLoading();
+            }
+        }
+
+        // NEW: Listener for display status changes
+        function setupDisplayStatusListener() {
+            onSnapshot(appSettingsDocRef, (docSnap) => {
+                if (docSnap.exists() && docSnap.data().hasOwnProperty('displayActive')) {
+                    displayRankingActive = docSnap.data().displayActive;
+                } else {
+                    // Default to true if setting doesn't exist (first load)
+                    displayRankingActive = true;
+                    // Optional: create the document with default true if it doesn't exist
+                    // This can be done in an async block to avoid blocking initial load
+                    setDoc(appSettingsDocRef, { displayActive: true }, { merge: true }).catch(console.error);
+                }
+                updateAdminDisplayStatusUI(); // Update admin panel UI
+                renderFilteredRankings(); // Re-render rankings based on new status
+            }, (error) => {
+                console.error("Error listening to display status:", error);
+                showToast("Gagal memuat status display.");
+                // Fallback to active display on error to avoid blank screen
+                displayRankingActive = true;
+                updateAdminDisplayStatusUI();
+                renderFilteredRankings();
+            });
+        }
+
+        // NEW: Update admin panel UI for display status
+        function updateAdminDisplayStatusUI() {
+            if (displayRankingActive) {
+                displayStatus.textContent = "Status: Aktif";
+                displayStatus.classList.remove('text-red-600');
+                displayStatus.classList.add('text-green-600');
+            } else {
+                displayStatus.textContent = "Status: Nonaktif";
+                displayStatus.classList.remove('text-green-600');
+                displayStatus.classList.add('text-red-600');
+            }
+            // Enable/disable buttons based on current status
+            activateDisplayBtn.disabled = displayRankingActive;
+            deactivateDisplayBtn.disabled = !displayRankingActive;
+        }
+
+        // NEW: Event listeners for display control buttons
+        activateDisplayBtn.addEventListener('click', () => updateDisplayStatus(true));
+        deactivateDisplayBtn.addEventListener('click', () => updateDisplayStatus(false));
+
 
         // Autentikasi Firebase pertama kali saat aplikasi dimuat
         onAuthStateChanged(auth, async (user) => {
@@ -1612,6 +1719,7 @@
                 
                 setupRankingListeners(); // Ini akan memicu listener data
                 setupUserAnnouncementListener(); // Setup listener untuk pengumuman di pop-up user
+                setupDisplayStatusListener(); // NEW: Setup listener for display status
                 // startCountdownUpdate() hanya akan dipanggil saat admin masuk ke halaman announcementManagementPage
                 // di event listener goToAnnouncementManagementBtn.
             } else {
@@ -1641,9 +1749,7 @@
         });
 
         // PENTING: Initial page display. Halaman home akan selalu ditampilkan secara default.
-        // Tidak perlu memanggil showPage(homePage) di sini lagi karena sudah diatur di HTML
-        // Jika ada kebutuhan untuk menyembunyikan halaman lain di awal (misal: loginPage), bisa ditambahkan di sini.
-        // Untuk saat ini, asumsikan hanya homePage yang terlihat di awal.
+        // homePage sudah tidak punya class 'hidden' di HTML, jadi ini sudah ditangani.
 
         // Pastikan header mengambil ruang (untuk min-h-screen-minus-header)
         document.addEventListener('DOMContentLoaded', () => {
