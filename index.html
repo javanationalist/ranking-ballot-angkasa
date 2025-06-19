@@ -71,7 +71,7 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        .form-input {
+        .form-input, .form-textarea {
             width: 100%;
             padding: 0.75rem;
             border: 1px solid #d1d5db; /* Gray-300 */
@@ -79,7 +79,7 @@
             font-size: 1rem;
             transition: border-color 0.2s;
         }
-        .form-input:focus {
+        .form-input:focus, .form-textarea:focus {
             outline: none;
             border-color: #6366f1; /* Indigo-500 */
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
@@ -167,6 +167,14 @@
             align-items: center;
             z-index: 2000;
         }
+        /* General modal content styling for white background */
+        .modal-content {
+            background-color: white; /* Set background to white */
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
         /* Style for the transparent action loading overlay */
         #actionLoadingOverlay {
             background-color: rgba(255, 255, 255, 0.7); /* Transparent white background */
@@ -176,13 +184,61 @@
             background-color: transparent;
             box-shadow: none;
         }
-        /* Specific style for announcement modal content */
+        /* Specific style for announcement modal content (overrides only width for user-facing) */
         #announcementModal .modal-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            text-align: center;
+            width: 100%;
+            max-width: 480px; /* Adjust max-width as needed */
+        }
+        /* New styles for admin sub-pages (Ballot Input and Announcement Management) */
+        .admin-sub-page {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            width: 100%;
+        }
+        .admin-sub-page.active {
+            display: flex;
+        }
+        .announcement-card {
+            background-color: #f8f9fa;
+            border: 1px solid #e0e7ff;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .announcement-card .info-icon {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            color: #6366f1;
+            cursor: pointer;
+            font-size: 1.25rem;
+        }
+        .announcement-card .timestamp {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-align: right;
+            margin-top: 1rem;
+        }
+        .announcement-info-popup {
+            position: absolute;
+            background-color: #333;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            top: 2.5rem; /* Adjust position relative to icon */
+            left: 1rem;
+        }
+        .announcement-card .info-icon:hover + .announcement-info-popup {
+            opacity: 1;
+            pointer-events: auto;
         }
     </style>
 </head>
@@ -233,10 +289,43 @@
             </div>
         </div>
 
-        <!-- Admin Page (Input Forms) -->
-        <div id="adminPage" class="hidden">
+        <!-- Admin Page (Main Hub) -->
+        <div id="adminPage" class="hidden flex-col items-center justify-center min-h-screen-minus-header">
+            <h3 class="text-2xl font-bold mb-8 text-center">Panel Admin<br>Pilih Aksi</h3>
+            <div class="space-y-4">
+                <button id="goToBallotInputBtn" class="btn btn-primary w-full md:w-auto text-xl px-6 py-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 011 1v8a1 1 0 01-1 1H5a1 1 0 01-1-1V7z" />
+                    </svg>
+                    Input Ballot
+                </button>
+                <button id="goToAnnouncementManagementBtn" class="btn btn-secondary w-full md:w-auto text-xl px-6 py-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.041 0 01-4.083-.98L2 17l1.336-3.111A4 4 0 004 13H2c-.662 0-1-2.67-1-6S1.338 0 2 0h16c.662 0 1 .67 1 6s-.338 7-1 7z" clip-rule="evenodd" />
+                    </svg>
+                    Siarkan Informasi
+                </button>
+            </div>
+            <div class="flex flex-col md:flex-row gap-4 mt-8 w-full">
+                <button id="logoutBtn" class="btn btn-secondary w-full md:w-1/2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                    </svg>
+                    Logout
+                </button>
+                <!-- NEW: Back to Home Button on Admin Panel -->
+                <button id="backToHomeFromAdminHubBtn" class="btn btn-secondary w-full md:w-1/2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Kembali ke Beranda
+                </button>
+            </div>
+        </div>
+
+        <!-- Ballot Input Page (Sub-page of Admin) -->
+        <div id="ballotInputPage" class="admin-sub-page">
             <h3 class="text-2xl font-bold mb-6 text-center text-indigo-700">Input Data Sekolah</h3>
-            <!-- Baris User ID dihapus dari tampilan di sini -->
             <div class="flex flex-col md:flex-row gap-6">
                 <!-- SMP/MTs Input -->
                 <div class="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-md">
@@ -298,14 +387,118 @@
                     </div>
                 </div>
             </div>
-            <button id="logoutBtn" class="btn btn-secondary w-full mt-6">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
-                </svg>
-                Logout
-            </button>
-            <button id="backToHomeFromAdmin" class="btn btn-secondary w-full mt-4">Kembali ke Beranda</button>
+            <div class="flex flex-col md:flex-row gap-4 mt-6 w-full">
+                <button id="logoutFromBallotBtn" class="btn btn-secondary w-full md:w-1/2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                    </svg>
+                    Logout
+                </button>
+                <button id="backToAdminHubFromBallotBtn" class="btn btn-secondary w-full md:w-1/2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Kembali ke Admin Panel
+                </button>
+            </div>
         </div>
+
+        <!-- Announcement Management Page (Sub-page of Admin) -->
+        <div id="announcementManagementPage" class="admin-sub-page">
+            <h3 class="text-2xl font-bold mb-6 text-center text-indigo-700">Siarkan Informasi</h3>
+            <div class="flex flex-col md:flex-row gap-6">
+                <!-- Input Form for Announcement -->
+                <div class="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-md">
+                    <h4 class="text-xl font-semibold mb-4 text-center text-indigo-700">Buat / Edit Informasi</h4>
+                    <div class="mb-4">
+                        <label for="announcementHeading" class="block text-gray-700 text-sm font-semibold mb-2">Masukkan Heading Informasi:</label>
+                        <input type="text" id="announcementHeading" class="form-input" placeholder="Contoh: Pengumuman Penting!">
+                    </div>
+                    <div class="mb-4">
+                        <label for="announcementContent" class="block text-gray-700 text-sm font-semibold mb-2">Masukkan Pengumuman:</label>
+                        <textarea id="announcementContent" class="form-textarea h-32" placeholder="Tulis pengumuman Anda di sini..."></textarea>
+                    </div>
+
+                    <div class="mb-4 flex items-center">
+                        <input type="checkbox" id="publishNowCheckbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        <label for="publishNowCheckbox" class="ml-2 block text-sm font-medium text-gray-900">Siarkan Sekarang Juga (Realtime)</label>
+                    </div>
+
+                    <div id="scheduleTimeSection" class="mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50 hidden">
+                        <label for="scheduledPublishTime" class="block text-gray-700 text-sm font-semibold mb-2">Siarkan pada (Tanggal & Waktu):</label>
+                        <input type="datetime-local" id="scheduledPublishTime" class="form-input">
+                        <p class="text-xs text-gray-500 mt-1">Waktu akan menggunakan zona waktu lokal browser Anda.</p>
+                    </div>
+
+                    <div class="mb-6 flex items-center">
+                        <input type="checkbox" id="includeTimestampCheckbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked>
+                        <label for="includeTimestampCheckbox" class="ml-2 block text-sm font-medium text-gray-900">Sertakan Tanggal dan Jam Informasi Saat Ini</label>
+                    </div>
+
+                    <button id="saveAnnouncementBtn" class="btn btn-primary w-full mt-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h-1v5.586l-1.293-1.293z" />
+                            <path d="M9 2a1 1 0 00-1 1v2a1 1 0 002 0V3a1 1 0 00-1-1zM3 8a1 1 0 011-1h2a1 1 0 110 2H4a1 1 0 01-1-1zM9 17a1 1 0 001 1h2a1 1 0 100-2h-2a1 1 0 00-1 1zM15 8a1 1 0 011-1h2a1 1 0 110 2h-2a1 1 0 01-1-1zM5 14a1 1 0 011-1h.01a1 1 0 011.414 0 1 1 0 010 1.414L6.414 16H6a1 1 0 01-1-1zm8-1a1 1 0 011 1v.01a1 1 0 01-1.414 0 1 1 0 010-1.414L13.586 12H14a1 1 0 01-1-1z" />
+                        </svg>
+                        Simpan Informasi
+                    </button>
+                    <button id="clearAnnouncementBtn" class="btn btn-secondary w-full mt-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 000-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                        Bersihkan Form
+                    </button>
+                </div>
+
+                <!-- Current Announcement Display -->
+                <div class="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-md relative">
+                    <h4 class="text-xl font-semibold mb-4 text-center text-indigo-700">Informasi Saat Ini</h4>
+                    <div id="currentAnnouncementDisplay" class="announcement-card min-h-[150px] flex flex-col justify-between">
+                        <div class="info-icon" title="Keterangan Aktivitas">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9.293 10.293a1 1 0 001.414 1.414L11 10.414V14a1 1 0 102 0v-4a1 1 0 00-.293-.707l-1.414-1.414a1 1 0 00-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                            <div class="announcement-info-popup"></div>
+                        </div>
+                        <p id="displayAnnouncementHeading" class="text-xl font-bold mb-2 text-center text-gray-800">Tidak Ada Informasi Saat Ini</p>
+                        <p id="displayAnnouncementContent" class="text-gray-700 text-center flex-grow">
+                            Belum ada pengumuman yang disiarkan.
+                        </p>
+                        <p id="displayAnnouncementTimestamp" class="timestamp hidden"></p>
+                        <div class="flex justify-center space-x-2 mt-4">
+                            <button id="editCurrentAnnouncementBtn" class="btn btn-secondary">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                                    <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+                                </svg>
+                                Edit
+                            </button>
+                            <button id="deleteCurrentAnnouncementBtn" class="btn btn-danger">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 000-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                                Hapus
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col md:flex-row gap-4 mt-6 w-full">
+                <button id="logoutFromAnnouncementBtn" class="btn btn-secondary w-full md:w-1/2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                    </svg>
+                    Logout
+                </button>
+                <button id="backToAdminHubFromAnnouncementBtn" class="btn btn-secondary w-full md:w-1/2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Kembali ke Admin Panel
+                </button>
+            </div>
+        </div>
+
 
         <!-- Ranking Display Page -->
         <div id="rankingPage" class="hidden flex flex-col items-center justify-center min-h-screen-minus-header">
@@ -400,13 +593,14 @@
         </div>
     </div>
 
-    <!-- Announcement Modal (NEW FEATURE) -->
+    <!-- Announcement Modal (User-facing Pop-up) -->
     <div id="announcementModal" class="modal-overlay">
-        <div class="modal-content w-full max-w-sm p-6 bg-white rounded-xl shadow-lg">
-            <h4 class="text-2xl font-bold text-indigo-700 mb-4">Informasi</h4>
-            <p class="text-lg text-gray-700 mb-6">
+        <div class="modal-content w-full max-w-sm p-6">
+            <h4 id="userAnnouncementHeading" class="text-2xl font-bold text-indigo-700 mb-4">Informasi</h4>
+            <p id="userAnnouncementContent" class="text-lg text-gray-700 mb-6">
                 Halo Guys! Selamat datang di Web Ranking Ballot LKBB ANGKASA Season 2 :D<br>Hasil ballot akan segera diperbarui oleh admin. Kamu bisa melihat kapan poin diperbarui.<br>Pantengin terus, ya! XD
             </p>
+            <p id="userAnnouncementTimestamp" class="text-xs text-gray-500 text-right mt-2 hidden"></p>
             <button id="closeAnnouncementBtn" class="btn btn-primary w-full">Siap</button>
         </div>
     </div>
@@ -414,9 +608,9 @@
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-        // Diperbarui: Tambahkan signInWithEmailAndPassword dan signOut
         import { getAuth, signInAnonymously, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
         import { getFirestore, collection, setDoc, doc, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+        import { serverTimestamp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"; // Import serverTimestamp
 
         // Firebase configuration and initialization
         const firebaseConfig = {
@@ -430,10 +624,10 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const appId = "ranking-ballot-angkasa-app"; // Pastikan ini sama dengan projectId Anda
+        const appId = "ranking-ballot-angkasa-app"; 
 
         // >>>>>> PENTING: GANTI DENGAN ARRAY UID ADMIN ANDA DARI FIREBASE CONSOLE! <<<<<<
-        // Contoh: const ADMIN_UIDS = [ " uid di bawahnya dek"] ;
+        // Contoh: const ADMIN_UIDS = ["uidAdmin1", "uidAdmin2", "uidAdmin3"];
         const ADMIN_UIDS = ["C6rp08brTBPTUE65TFWJmdfuHo83","dRA3jTWZnVQjzi6MRzaElGZcMUA3"]; // GANTI DENGAN ARRAY UID ADMIN ASLI!
 
         let currentUserId = null;
@@ -441,6 +635,7 @@
         let smpSchoolsData = []; // To store all SMP data from Firestore
         let smaSchoolsData = []; // To store all SMA data from Firestore
         let currentSearchQuery = '';
+        let currentAnnouncement = null; // To store the current active announcement
 
         // Variables for delete modal context
         let schoolToDeleteType = null;
@@ -454,12 +649,33 @@
         const loadingAnimation = document.getElementById('loadingAnimation'); // For ranking page specific loading
         const rankingContent = document.getElementById('rankingContent');
 
+        // Admin Sub-pages
+        const ballotInputPage = document.getElementById('ballotInputPage');
+        const announcementManagementPage = document.getElementById('announcementManagementPage');
+
         const viewBallotBtn = document.getElementById('viewBallotBtn');
         const loginBtn = document.getElementById('loginBtn');
         const backToHomeFromLogin = document.getElementById('backToHomeFromLogin');
-        const backToHomeFromAdmin = document.getElementById('backToHomeFromAdmin');
         const backToHomeFromRanking = document.getElementById('backToHomeFromRanking');
-        const logoutBtn = document.getElementById('logoutBtn');
+        const logoutBtn = document.getElementById('logoutBtn'); // Main logout button on admin hub
+
+        // Admin Hub Buttons
+        const goToBallotInputBtn = document.getElementById('goToBallotInputBtn');
+        const goToAnnouncementManagementBtn = document.getElementById('goToAnnouncementManagementBtn');
+        // const backToAdminHubBtn = document.getElementById('backToAdminHubBtn'); // Renamed for clarity in sub-pages
+        // const backToAdminHubFromAnnouncementBtn = document.getElementById('backToAdminHubFromAnnouncementBtn'); // Renamed for clarity in sub-pages
+
+        // NEW: Back to Home Button from Admin Hub
+        const backToHomeFromAdminHubBtn = document.getElementById('backToHomeFromAdminHubBtn');
+
+        // NEW: Logout buttons for sub-pages
+        const logoutFromBallotBtn = document.getElementById('logoutFromBallotBtn');
+        const logoutFromAnnouncementBtn = document.getElementById('logoutFromAnnouncementBtn');
+
+        // NEW: Back to Admin Hub buttons for sub-pages
+        const backToAdminHubFromBallotBtn = document.getElementById('backToAdminHubFromBallotBtn');
+        const backToAdminHubFromAnnouncementBtn = document.getElementById('backToAdminHubFromAnnouncementBtn');
+
 
         const usernameInput = document.getElementById('username'); // Digunakan untuk email admin
         const passwordInput = document.getElementById('password');
@@ -496,18 +712,45 @@
         const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
         const actionLoadingOverlay = document.getElementById('actionLoadingOverlay');
 
-        // Announcement Modal Elements
+        // Announcement Management Elements
+        const announcementHeadingInput = document.getElementById('announcementHeading');
+        const announcementContentInput = document.getElementById('announcementContent');
+        const publishNowCheckbox = document.getElementById('publishNowCheckbox');
+        const scheduleTimeSection = document.getElementById('scheduleTimeSection');
+        const scheduledPublishTimeInput = document.getElementById('scheduledPublishTime');
+        const includeTimestampCheckbox = document.getElementById('includeTimestampCheckbox');
+        const saveAnnouncementBtn = document.getElementById('saveAnnouncementBtn'); 
+        const clearAnnouncementBtn = document.getElementById('clearAnnouncementBtn');
+        
+        const currentAnnouncementDisplay = document.getElementById('currentAnnouncementDisplay');
+        const displayAnnouncementHeading = document.getElementById('displayAnnouncementHeading');
+        const displayAnnouncementContent = document.getElementById('displayAnnouncementContent');
+        const displayAnnouncementTimestamp = document.getElementById('displayAnnouncementTimestamp');
+        const editCurrentAnnouncementBtn = document.getElementById('editCurrentAnnouncementBtn');
+        const deleteCurrentAnnouncementBtn = document.getElementById('deleteCurrentAnnouncementBtn');
+        const announcementInfoPopup = currentAnnouncementDisplay.querySelector('.announcement-info-popup');
+
+        // User-facing Announcement Modal Elements
         const announcementModal = document.getElementById('announcementModal');
         const closeAnnouncementBtn = document.getElementById('closeAnnouncementBtn');
+        const userAnnouncementHeading = document.getElementById('userAnnouncementHeading');
+        const userAnnouncementContent = document.getElementById('userAnnouncementContent');
+        const userAnnouncementTimestamp = document.getElementById('userAnnouncementTimestamp');
+
+        // Default announcement content for user-facing modal
+        const defaultAnnouncementHeading = "Informasi";
+        const defaultAnnouncementContent = "Halo Guys! Selamat datang di Web Ranking Ballot LKBB ANGKASA Season 2 :D<br>Hasil ballot akan segera diperbarui oleh admin. Kamu bisa melihat kapan poin diperbarui.<br>Pantengin terus, ya! XD";
 
 
         // --- Navigation Functions ---
         function showPage(pageToShow) {
-            // Hide all main pages
+            // Hide all main pages and admin sub-pages
             homePage.classList.add('hidden');
             loginPage.classList.add('hidden');
             adminPage.classList.add('hidden');
             rankingPage.classList.add('hidden');
+            ballotInputPage.classList.remove('active'); // Hide sub-page
+            announcementManagementPage.classList.remove('active'); // Hide sub-page
 
             // Remove flex display from all pages to ensure correct hidden state
             homePage.classList.remove('flex');
@@ -519,8 +762,24 @@
             pageToShow.classList.remove('hidden');
             if (pageToShow === homePage || pageToShow === loginPage || pageToShow === adminPage || pageToShow === rankingPage) {
                 pageToShow.classList.add('flex', 'flex-col');
+            } else if (pageToShow === ballotInputPage || pageToShow === announcementManagementPage) {
+                // For admin sub-pages, they are already flex-col by default CSS, just need 'active' class
+                pageToShow.classList.add('active');
             }
         }
+
+        // Fungsi untuk menampilkan sub-page admin
+        function showAdminSubPage(subPageToShow) {
+            // Sembunyikan semua sub-page admin
+            ballotInputPage.classList.remove('active');
+            announcementManagementPage.classList.remove('active');
+
+            // Tampilkan sub-page yang diminta
+            subPageToShow.classList.add('active');
+            adminPage.classList.remove('flex', 'flex-col'); // Hide main admin hub
+            adminPage.classList.add('hidden'); // Ensure main admin hub is hidden
+        }
+
 
         // --- Toast Notification ---
         function showToast(message, duration = 3000) {
@@ -556,7 +815,8 @@
         }
 
         // --- Global Action Loading Functions ---
-        function showActionLoading() {
+        function showActionLoading(message = "Tunggu Sebentar...") {
+            actionLoadingOverlay.querySelector('p').textContent = message;
             actionLoadingOverlay.classList.remove('hidden');
         }
 
@@ -568,13 +828,39 @@
         function formatTimestamp(timestamp) {
             if (!timestamp) return '-';
             let date;
-            // Check if it's a Firestore Timestamp object or a Date object
+            if (timestamp.toDate) { // Firestore Timestamp object
+                date = timestamp.toDate();
+            } else if (timestamp instanceof Date) { // Standard Date object
+                date = timestamp;
+            } else {
+                return '-'; // Invalid timestamp format
+            }
+            return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' ' +
+                   date.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function formatDateOnly(timestamp) {
+            if (!timestamp) return '-';
+            let date;
             if (timestamp.toDate) {
                 date = timestamp.toDate();
             } else if (timestamp instanceof Date) {
                 date = timestamp;
             } else {
-                return '-'; // Invalid timestamp format
+                return '-';
+            }
+            return date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        function formatTimeOnly(timestamp) {
+            if (!timestamp) return '-';
+            let date;
+            if (timestamp.toDate) {
+                date = timestamp.toDate();
+            } else if (timestamp instanceof Date) {
+                date = timestamp;
+            } else {
+                return '-';
             }
             return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
@@ -584,51 +870,63 @@
             showPage(rankingPage);
             loadingAnimation.classList.remove('hidden'); // Show ranking page specific loading
             rankingContent.classList.add('hidden');
-            // Data will be fetched by onSnapshot listeners which are set up
-            // and triggered on auth state change.
-            // Simulate loading time, then render based on existing data
             setTimeout(() => {
-                renderFilteredRankings(); // Render immediately if data is already there
-                hideLoadingAndShowContent(); // Hide ranking specific loading
-            }, 1000); // 1 second loading animation
+                renderFilteredRankings();
+                hideLoadingAndShowContent();
+            }, 1000);
         });
 
-        // Diperbarui: Logika loginBtn untuk langsung ke halaman admin jika sudah login
         loginBtn.addEventListener('click', () => {
             if (isAdminLoggedIn) {
-                showPage(adminPage);
-                // Muat ulang data admin saat masuk halaman (real-time listener yang menangani)
-                fetchAndDisplayAdminData('smp_mts_schools', smpTableBody);
-                fetchAndDisplayAdminData('sma_smk_ma_schools', smaTableBody);
+                showPage(adminPage); // Go to Admin Hub if already logged in
             } else {
                 showPage(loginPage);
-                loginError.classList.add('hidden'); // Sembunyikan pesan error sebelumnya
-                usernameInput.value = ''; // Kosongkan input
+                loginError.classList.add('hidden');
+                usernameInput.value = '';
                 passwordInput.value = '';
             }
         });
 
-        backToHomeFromLogin.addEventListener('click', () => showPage(homePage));
-        backToHomeFromAdmin.addEventListener('click', () => {
-            // isAdminLoggedIn tidak direset di sini, memungkinkan akses admin yang persisten
-            showPage(homePage);
+        // Admin Hub Navigation
+        goToBallotInputBtn.addEventListener('click', () => {
+            showAdminSubPage(ballotInputPage);
+            fetchAndDisplayAdminData('smp_mts_schools', smpTableBody);
+            fetchAndDisplayAdminData('sma_smk_ma_schools', smaTableBody);
         });
+
+        goToAnnouncementManagementBtn.addEventListener('click', () => {
+            showAdminSubPage(announcementManagementPage);
+            loadCurrentAnnouncementForAdminEdit(); // Load current announcement for editing
+            updateAnnouncementDisplayForAdmin(); // Initial call to update countdown if any
+            startCountdownUpdate(); // Start countdown update interval
+        });
+
+        // Back buttons
+        backToHomeFromLogin.addEventListener('click', () => showPage(homePage));
         backToHomeFromRanking.addEventListener('click', () => {
-            currentSearchQuery = ''; // Bersihkan pencarian saat meninggalkan halaman ranking
+            currentSearchQuery = '';
             schoolSearchInput.value = '';
             showPage(homePage);
         });
 
-        logoutBtn.addEventListener('click', () => {
-            showLogoutModal();
-        });
+        // NEW: Back to Admin Hub buttons on sub-pages
+        backToAdminHubFromBallotBtn.addEventListener('click', () => showPage(adminPage));
+        backToAdminHubFromAnnouncementBtn.addEventListener('click', () => showPage(adminPage));
 
-        // Diperbarui: Logout menggunakan Firebase signOut()
+        // NEW: Back to Home button on main Admin Hub
+        backToHomeFromAdminHubBtn.addEventListener('click', () => showPage(homePage));
+
+        // NEW: Logout buttons on sub-pages (all trigger the same logout flow)
+        logoutBtn.addEventListener('click', () => showLogoutModal()); // Main admin hub logout
+        logoutFromBallotBtn.addEventListener('click', () => showLogoutModal());
+        logoutFromAnnouncementBtn.addEventListener('click', () => showLogoutModal());
+
+
         confirmLogoutBtn.addEventListener('click', async () => {
-            showActionLoading();
+            showActionLoading("Melakukan Logout...");
             try {
-                await signOut(auth); // Melakukan logout dari Firebase Authentication
-                isAdminLoggedIn = false; // Set status login admin menjadi false
+                await signOut(auth);
+                isAdminLoggedIn = false;
                 hideLogoutModal();
                 showPage(homePage);
                 showToast("Berhasil logout.");
@@ -644,12 +942,11 @@
             hideLogoutModal();
         });
 
-        // Event listeners for delete modal
         confirmDeleteBtn.addEventListener('click', async () => {
             if (schoolToDeleteType && schoolToDeleteId) {
-                showActionLoading(); // Show global loading for delete action
+                showActionLoading("Menghapus Data...");
                 await executeDeleteSchool(schoolToDeleteType, schoolToDeleteId);
-                hideActionLoading(); // Hide global loading after delete
+                hideActionLoading();
             }
             hideDeleteModal();
         });
@@ -658,52 +955,55 @@
             hideDeleteModal();
         });
 
-        // Diperbarui: Menggunakan Firebase Email/Password Authentication
         submitLoginBtn.addEventListener('click', async () => {
-            showActionLoading(); // Tampilkan loading
-            const email = usernameInput.value; // Nilai dari input "Username Admin" adalah email
+            showActionLoading("Mencoba Login...");
+            const email = usernameInput.value;
             const password = passwordInput.value;
 
             try {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                // Jika login berhasil, userCredential.user akan berisi objek pengguna
                 console.log("Login berhasil! UID:", userCredential.user.uid);
                 
-                // Diperbarui: Cek apakah UID yang login termasuk dalam daftar ADMIN_UIDS
                 isAdminLoggedIn = ADMIN_UIDS.includes(userCredential.user.uid);
                 
-                // Jika login berhasil tapi UID bukan admin, tetap beri tahu
                 if (!isAdminLoggedIn) {
                     showToast("Login berhasil, tetapi Anda bukan admin yang terdaftar.");
-                    // Opsional: langsung log out user non-admin yang mencoba login
                     await signOut(auth); 
-                    showPage(homePage); // Kembali ke homepage
-                    return; // Hentikan eksekusi lebih lanjut
+                    showPage(homePage);
+                    return;
                 }
 
-                showPage(adminPage); // Pindah ke halaman admin
-                loginError.classList.add('hidden'); // Sembunyikan error
-                fetchAndDisplayAdminData('smp_mts_schools', smpTableBody); // Muat data admin
-                fetchAndDisplayAdminData('sma_smk_ma_schools', smaTableBody);
+                showPage(adminPage); // Go to Admin Hub
+                loginError.classList.add('hidden');
                 showToast("Login Admin Berhasil!");
             } catch (error) {
                 console.error("Login gagal:", error.code, error.message);
-                loginError.classList.remove('hidden'); // Tampilkan pesan error
-                showToast("Login gagal. Username atau password salah!"); // Pesan tetap "Username"
+                loginError.classList.remove('hidden');
+                showToast("Login gagal. Username atau password salah!");
             } finally {
-                hideActionLoading(); // Sembunyikan loading
+                hideActionLoading();
             }
         });
 
         schoolSearchInput.addEventListener('input', (e) => {
             currentSearchQuery = e.target.value;
-            renderFilteredRankings(); // Re-render rankings with the new search query
+            renderFilteredRankings();
         });
+
+        // Toggle schedule time input visibility
+        publishNowCheckbox.addEventListener('change', () => {
+            if (publishNowCheckbox.checked) {
+                scheduleTimeSection.classList.add('hidden');
+                scheduledPublishTimeInput.value = ''; // Clear scheduled time if publish now is checked
+            } else {
+                scheduleTimeSection.classList.remove('hidden');
+            }
+        });
+
 
         // --- Firestore Operations (Admin) ---
 
         async function addSchool(type, name, points) {
-            // Lapisan UI: Cek apakah admin sudah login dan UID-nya ada di daftar ADMIN_UIDS
             if (!isAdminLoggedIn || !ADMIN_UIDS.includes(currentUserId)) {
                 showToast("Anda tidak memiliki izin untuk menambah data. Silakan login sebagai admin.");
                 return;
@@ -722,18 +1022,17 @@
                 return;
             }
 
-            showActionLoading(); // Tampilkan loading
+            showActionLoading("Menyimpan Data Ballot...");
             const collectionPath = `artifacts/${appId}/public/data/${type}`;
-            const schoolRef = doc(db, collectionPath, name.trim()); // Gunakan nama sekolah sebagai ID dokumen
+            const schoolRef = doc(db, collectionPath, name.trim());
 
             try {
                 await setDoc(schoolRef, {
                     name: name.trim(),
                     points: parsedPoints,
-                    lastUpdated: new Date() // Set timestamp saat ini
-                }, { merge: true }); // Gunakan merge untuk update jika sudah ada, buat jika belum ada
+                    lastUpdated: serverTimestamp() // Gunakan serverTimestamp
+                }, { merge: true });
                 showToast(`Data ${name.trim()} berhasil ditambahkan/diperbarui.`);
-                // Kosongkan input setelah berhasil
                 if (type === 'smp_mts_schools') {
                     smpNameInput.value = '';
                     smpPointsInput.value = '';
@@ -745,13 +1044,11 @@
                 console.error("Error adding document: ", e);
                 showToast("Gagal menambahkan/memperbarui data. Periksa izin Anda.");
             } finally {
-                hideActionLoading(); // Sembunyikan loading
+                hideActionLoading();
             }
         }
 
-        // Fungsi ini sekarang dipanggil setelah konfirmasi dari modal
         async function executeDeleteSchool(type, docId) {
-            // Lapisan UI: Cek apakah admin sudah login dan UID-nya ada di daftar ADMIN_UIDS
             if (!isAdminLoggedIn || !ADMIN_UIDS.includes(currentUserId)) {
                 showToast("Anda tidak memiliki izin untuk menghapus data. Silakan login sebagai admin.");
                 return;
@@ -771,13 +1068,11 @@
             }
         }
 
-        // --- Admin Data Display (Real-time with onSnapshot) ---
         function fetchAndDisplayAdminData(collectionName, tableBodyElement) {
             if (currentUserId === null) {
                 console.log("Firebase not yet authenticated for admin data fetch.");
                 return;
             }
-            // Hanya muat data admin jika sudah login sebagai admin dan UID-nya ada di daftar ADMIN_UIDS
             if (!isAdminLoggedIn || !ADMIN_UIDS.includes(currentUserId)) {
                 tableBodyElement.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Anda tidak memiliki izin untuk melihat data ini.</td></tr>`;
                 return;
@@ -795,13 +1090,11 @@
                     }
                 });
 
-                // Urutkan berdasarkan nama untuk tampilan yang konsisten di panel admin
                 schools.sort((a, b) => a.name.localeCompare(b.name));
 
                 tableBodyElement.innerHTML = '';
                 if (schools.length === 0) {
                     tableBodyElement.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Belum ada data sekolah.</td></tr>`;
-                    // Perbarui timestamp ke 'No Data' atau kosong
                     if (collectionName === 'smp_mts_schools') {
                         smpAdminLastUpdated.textContent = 'Diperbarui pada: -';
                     } else if (collectionName === 'sma_smk_ma_schools') {
@@ -822,14 +1115,12 @@
                     `;
                 });
 
-                // Perbarui 'Diperbarui pada' timestamp untuk tabel admin
                 if (collectionName === 'smp_mts_schools') {
                     smpAdminLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
                 } else if (collectionName === 'sma_smk_ma_schools') {
                     smaAdminLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
                 }
 
-                // Tambahkan event listener untuk tombol edit dan delete
                 tableBodyElement.querySelectorAll('.edit-btn').forEach(button => {
                     button.addEventListener('click', (e) => {
                         const id = e.target.dataset.id;
@@ -849,11 +1140,10 @@
                     });
                 });
 
-                // Mengubah logika untuk menampilkan modal delete kustom
                 tableBodyElement.querySelectorAll('.delete-btn').forEach(button => {
                     button.addEventListener('click', (e) => {
                         const id = e.target.dataset.id;
-                        const name = e.target.dataset.name; // Dapatkan nama sekolah untuk modal
+                        const name = e.target.dataset.name;
                         showDeleteModal(name, collectionName, id);
                     });
                 });
@@ -872,21 +1162,286 @@
             addSchool('sma_smk_ma_schools', smaNameInput.value, smaPointsInput.value);
         });
 
+        // --- Announcement Management Functions ---
+
+        // Load current announcement for admin to edit
+        function loadCurrentAnnouncementForAdminEdit() {
+            const announcementDocRef = doc(db, `artifacts/${appId}/public/data/announcements`, 'mainAnnouncement');
+            onSnapshot(announcementDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    currentAnnouncement = data; // Store data globally
+                    announcementHeadingInput.value = data.heading || '';
+                    announcementContentInput.value = data.content || '';
+                    includeTimestampCheckbox.checked = data.showTimestamp || false;
+
+                    // Handle scheduling
+                    if (data.publishAt && data.publishAt.toDate) { // If a publishAt timestamp exists
+                        const publishDate = data.publishAt.toDate();
+                        if (publishDate.getTime() > new Date().getTime()) { // If scheduled for future
+                            publishNowCheckbox.checked = false;
+                            scheduleTimeSection.classList.remove('hidden');
+                            // Format date for datetime-local input (YYYY-MM-DDTHH:mm)
+                            scheduledPublishTimeInput.value = publishDate.toISOString().substring(0, 16);
+                        } else { // Already published (or publish now)
+                            publishNowCheckbox.checked = true;
+                            scheduleTimeSection.classList.add('hidden');
+                            scheduledPublishTimeInput.value = '';
+                        }
+                    } else { // No specific publishAt, assume publish now
+                        publishNowCheckbox.checked = true;
+                        scheduleTimeSection.classList.add('hidden');
+                        scheduledPublishTimeInput.value = '';
+                    }
+                } else {
+                    // No announcement yet, clear form
+                    currentAnnouncement = null;
+                    announcementHeadingInput.value = '';
+                    announcementContentInput.value = '';
+                    publishNowCheckbox.checked = true; // Default to publish now
+                    scheduleTimeSection.classList.add('hidden');
+                    scheduledPublishTimeInput.value = '';
+                    includeTimestampCheckbox.checked = true; // Default to include timestamp
+                }
+                updateAnnouncementDisplayForAdmin(); // Update right panel for admin
+            }, (error) => {
+                console.error("Error loading announcement for admin:", error);
+                showToast("Gagal memuat informasi untuk admin.");
+            });
+        }
+
+        // Display current announcement in the right panel of admin page
+        function updateAnnouncementDisplayForAdmin() {
+            if (!currentAnnouncement) {
+                displayAnnouncementHeading.textContent = "Tidak Ada Informasi Saat Ini";
+                displayAnnouncementContent.textContent = "Belum ada pengumuman yang disiarkan.";
+                displayAnnouncementTimestamp.classList.add('hidden');
+                announcementInfoPopup.textContent = "Tidak ada informasi aktif.";
+                editCurrentAnnouncementBtn.disabled = true;
+                deleteCurrentAnnouncementBtn.disabled = true;
+                return;
+            }
+
+            editCurrentAnnouncementBtn.disabled = false;
+            deleteCurrentAnnouncementBtn.disabled = false;
+
+            displayAnnouncementHeading.textContent = currentAnnouncement.heading || 'Tanpa Heading';
+            // Replace newlines with <br> for proper display in HTML
+            displayAnnouncementContent.innerHTML = (currentAnnouncement.content || 'Tidak ada konten').replace(/\n/g, '<br>');
+
+            if (currentAnnouncement.showTimestamp && currentAnnouncement.publishAt) {
+                const publishDate = currentAnnouncement.publishAt.toDate();
+                displayAnnouncementTimestamp.textContent = `Disiarkan: ${formatTimestamp(publishDate)}`;
+                displayAnnouncementTimestamp.classList.remove('hidden');
+            } else {
+                displayAnnouncementTimestamp.classList.add('hidden');
+            }
+
+            // Update info popup for admin
+            let infoText = "";
+            if (currentAnnouncement.publishAt) {
+                const publishDate = currentAnnouncement.publishAt.toDate();
+                const now = new Date();
+                if (publishDate.getTime() > now.getTime()) {
+                    // Scheduled for future
+                    const timeLeft = publishDate.getTime() - now.getTime();
+                    const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                    
+                    let countdownString = `Dalam `;
+                    if (days > 0) countdownString += `${days}h `;
+                    if (hours > 0) countdownString += `${hours}j `;
+                    if (minutes > 0) countdownString += `${minutes}m `;
+                    countdownString += `${seconds}d`; // Always show seconds
+
+                    infoText += `Dijadwalkan: ${formatTimestamp(publishDate)} (${countdownString.trim()})\n`;
+                    infoText += `Status: Belum Disiarkan`;
+                } else {
+                    infoText += `Disiarkan: ${formatTimestamp(publishDate)}\n`;
+                    infoText += `Status: Sudah Disiarkan`;
+                }
+            } else {
+                 infoText += `Status: Tidak Ada Timestamp`; // Should not happen with current logic, but good fallback
+            }
+            if (currentAnnouncement.lastEditedBy) {
+                 infoText += `\nTerakhir diedit oleh: ${currentAnnouncement.lastEditedBy}`;
+            }
+            announcementInfoPopup.innerHTML = infoText.replace(/\n/g, '<br>');
+        }
+        
+        // Update countdown for admin display every second
+        let countdownInterval;
+        function startCountdownUpdate() {
+            if (countdownInterval) clearInterval(countdownInterval); // Clear existing interval
+            countdownInterval = setInterval(() => {
+                if (announcementManagementPage.classList.contains('active')) { // Only update if admin is on the page
+                    updateAnnouncementDisplayForAdmin();
+                } else {
+                    clearInterval(countdownInterval); // Stop if admin leaves the page
+                }
+            }, 1000);
+        }
+
+        saveAnnouncementBtn.addEventListener('click', async () => {
+            if (!isAdminLoggedIn || !ADMIN_UIDS.includes(currentUserId)) {
+                showToast("Anda tidak memiliki izin untuk menyimpan informasi.");
+                return;
+            }
+
+            const heading = announcementHeadingInput.value.trim();
+            const content = announcementContentInput.value.trim();
+            const showTimestamp = includeTimestampCheckbox.checked;
+            const publishNow = publishNowCheckbox.checked;
+
+            if (!heading || !content) {
+                showToast("Heading dan Pengumuman tidak boleh kosong.");
+                return;
+            }
+
+            let publishAtTimestamp;
+            if (publishNow) {
+                publishAtTimestamp = serverTimestamp(); // Set to server current time
+            } else {
+                const scheduledTime = scheduledPublishTimeInput.value;
+                if (!scheduledTime) {
+                    showToast("Harap masukkan tanggal dan waktu untuk jadwal siaran.");
+                    return;
+                }
+                const localDate = new Date(scheduledTime);
+                if (isNaN(localDate.getTime())) {
+                    showToast("Format tanggal/waktu tidak valid.");
+                    return;
+                }
+                // Pastikan waktu yang dijadwalkan tidak di masa lalu jika tidak disiarkan sekarang
+                if (localDate.getTime() < new Date().getTime()) {
+                    showToast("Waktu penjadwalan tidak bisa di masa lalu.");
+                    return;
+                }
+                publishAtTimestamp = localDate; // Store as Date object, Firestore will convert
+            }
+
+            showActionLoading("Menyimpan Informasi...");
+            const announcementDocRef = doc(db, `artifacts/${appId}/public/data/announcements`, 'mainAnnouncement');
+
+            try {
+                await setDoc(announcementDocRef, {
+                    heading: heading,
+                    content: content,
+                    showTimestamp: showTimestamp,
+                    publishAt: publishAtTimestamp,
+                    lastEditedBy: auth.currentUser ? auth.currentUser.email : 'Unknown' // Store admin's email
+                });
+                showToast("Informasi berhasil disimpan.");
+                // loadCurrentAnnouncementForAdminEdit() will be triggered by onSnapshot and refresh
+            } catch (e) {
+                console.error("Error saving announcement: ", e);
+                showToast("Gagal menyimpan informasi. Coba lagi.");
+            } finally {
+                hideActionLoading();
+            }
+        });
+
+        editCurrentAnnouncementBtn.addEventListener('click', () => {
+            if (currentAnnouncement) {
+                announcementHeadingInput.value = currentAnnouncement.heading || '';
+                announcementContentInput.value = currentAnnouncement.content || '';
+                includeTimestampCheckbox.checked = currentAnnouncement.showTimestamp || false;
+
+                if (currentAnnouncement.publishAt && currentAnnouncement.publishAt.toDate) {
+                    const publishDate = currentAnnouncement.publishAt.toDate();
+                    // Check if the scheduled time is in the future.
+                    // If it's in the past or current, treat as "publish now"
+                    if (publishDate.getTime() > new Date().getTime()) {
+                        publishNowCheckbox.checked = false;
+                        scheduleTimeSection.classList.remove('hidden');
+                        scheduledPublishTimeInput.value = publishDate.toISOString().substring(0, 16);
+                    } else {
+                        publishNowCheckbox.checked = true;
+                        scheduleTimeSection.classList.add('hidden');
+                        scheduledPublishTimeInput.value = '';
+                    }
+                } else {
+                    publishNowCheckbox.checked = true; // Default to publish now if no publishAt
+                    scheduleTimeSection.classList.add('hidden');
+                    scheduledPublishTimeInput.value = '';
+                }
+                showToast("Informasi dimuat ke form untuk diedit.");
+            } else {
+                showToast("Tidak ada informasi untuk diedit.");
+            }
+        });
+
+        deleteCurrentAnnouncementBtn.addEventListener('click', async () => {
+            if (!currentAnnouncement) {
+                showToast("Tidak ada informasi untuk dihapus.");
+                return;
+            }
+            if (!isAdminLoggedIn || !ADMIN_UIDS.includes(currentUserId)) {
+                showToast("Anda tidak memiliki izin untuk menghapus informasi. Silakan login sebagai admin.");
+                return;
+            }
+
+            const confirmationMessage = `Yakin ingin menghapus informasi "${currentAnnouncement.heading || 'Tanpa Heading'}"? Tindakan ini tidak dapat dipulihkan!`;
+            // Re-use deleteModal and its elements
+            deleteModal.querySelector('.modal-content h4').textContent = "Konfirmasi Penghapusan Informasi";
+            deleteModal.querySelector('p.mb-6').innerHTML = confirmationMessage;
+            
+            // Temporarily replace the confirm delete handler
+            const originalConfirmHandler = confirmDeleteBtn.onclick; 
+            const originalCancelHandler = cancelDeleteBtn.onclick;
+
+            confirmDeleteBtn.onclick = async () => {
+                showActionLoading("Menghapus Informasi...");
+                const announcementDocRef = doc(db, `artifacts/${appId}/public/data/announcements`, 'mainAnnouncement');
+                try {
+                    await deleteDoc(announcementDocRef);
+                    showToast("Informasi berhasil dihapus.");
+                    // currentAnnouncement will be set to null by onSnapshot callback
+                    // and the user-facing modal will revert to default
+                } catch (e) {
+                    console.error("Error deleting announcement: ", e);
+                    showToast("Gagal menghapus informasi. Coba lagi.");
+                } finally {
+                    hideActionLoading();
+                    hideDeleteModal();
+                    // Restore original handlers
+                    confirmDeleteBtn.onclick = originalConfirmHandler; 
+                    cancelDeleteBtn.onclick = originalCancelHandler;
+                }
+            };
+            cancelDeleteBtn.onclick = () => {
+                hideDeleteModal();
+                // Restore original handlers
+                confirmDeleteBtn.onclick = originalConfirmHandler; 
+                cancelDeleteBtn.onclick = originalCancelHandler;
+            };
+
+            deleteModal.classList.remove('hidden'); // Show the modal
+        });
+
+        clearAnnouncementBtn.addEventListener('click', () => {
+            announcementHeadingInput.value = '';
+            announcementContentInput.value = '';
+            publishNowCheckbox.checked = true;
+            scheduleTimeSection.classList.add('hidden');
+            scheduledPublishTimeInput.value = '';
+            includeTimestampCheckbox.checked = true;
+            showToast("Form informasi dibersihkan.");
+        });
+
         // --- Ranking Display (Real-time with onSnapshot) ---
 
-        // Siapkan listener satu kali untuk pembaruan ranking real-time
         function setupRankingListeners() {
-            if (currentUserId === null) return; // Tunggu otentikasi
-            
-            // Atur isAdminLoggedIn berdasarkan UID yang sedang login.
-            // Ini dipanggil setiap kali status autentikasi berubah.
+            if (currentUserId === null) return;
             isAdminLoggedIn = ADMIN_UIDS.includes(currentUserId); 
 
             const smpQuery = collection(db, `artifacts/${appId}/public/data/smp_mts_schools`);
             const smaQuery = collection(db, `artifacts/${appId}/public/data/sma_smk_ma_schools`);
 
             onSnapshot(smpQuery, (snapshot) => {
-                smpSchoolsData = []; // Bersihkan data sebelumnya
+                smpSchoolsData = [];
                 let latestUpdateTimestamp = null;
                 snapshot.forEach((doc) => {
                     const data = doc.data();
@@ -895,15 +1450,15 @@
                         latestUpdateTimestamp = data.lastUpdated;
                     }
                 });
-                smpRankingLastUpdated.textContent = `Diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
-                renderFilteredRankings(); // Render ulang kedua tabel dengan data potensial baru
+                smpRankingLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
+                renderFilteredRankings();
             }, (error) => {
                 console.error("Error listening to SMP/MTs ranking:", error);
                 showToast("Gagal memuat ranking SMP/MTs.");
             });
 
             onSnapshot(smaQuery, (snapshot) => {
-                smaSchoolsData = []; // Bersihkan data sebelumnya
+                smaSchoolsData = [];
                 let latestUpdateTimestamp = null;
                 snapshot.forEach((doc) => {
                     const data = doc.data();
@@ -912,8 +1467,8 @@
                         latestUpdateTimestamp = data.lastUpdated;
                     }
                 });
-                smaRankingLastUpdated.textContent = `Diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
-                renderFilteredRankings(); // Render ulang kedua tabel dengan data potensial baru
+                smaRankingLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
+                renderFilteredRankings();
             }, (error) => {
                 console.error("Error listening to SMA/SMK/MA ranking:", error);
                 showToast("Gagal memuat ranking SMA/SMK/MA.");
@@ -922,7 +1477,6 @@
 
 
         function renderFilteredRankings() {
-            // Terapkan filter pencarian
             const filteredSmp = smpSchoolsData.filter(school =>
                 school.name.toLowerCase().includes(currentSearchQuery.toLowerCase())
             );
@@ -930,19 +1484,17 @@
                 school.name.toLowerCase().includes(currentSearchQuery.toLowerCase())
             );
 
-            // Urutkan berdasarkan poin descending
             filteredSmp.sort((a, b) => b.points - a.points);
             filteredSma.sort((a, b) => b.points - a.points);
 
             renderRankingTable(filteredSmp, displaySmpRanking);
             renderRankingTable(filteredSma, displaySmaRanking);
 
-            // Sembunyikan loading setelah render awal jika masih terlihat
             hideLoadingAndShowContent();
         }
 
         function renderRankingTable(schools, tableBodyElement) {
-            tableBodyElement.innerHTML = ''; // Bersihkan entri sebelumnya
+            tableBodyElement.innerHTML = '';
             if (schools.length === 0) {
                 tableBodyElement.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Belum ada data ranking.</td></tr>`;
                 return;
@@ -951,8 +1503,7 @@
             schools.forEach((school, index) => {
                 const row = tableBodyElement.insertRow();
                 row.classList.add('ranking-item');
-                // Terapkan kelas 'top-rank' jika itu sekolah peringkat tertinggi
-                if (index === 0 && schools[0].points > 0) { // Hanya sorot jika ada poin
+                if (index === 0 && schools[0].points > 0) {
                     row.classList.add('top-rank');
                 }
                 row.innerHTML = `
@@ -968,23 +1519,63 @@
             rankingContent.classList.remove('hidden');
         }
 
+        // --- User-Facing Announcement Logic ---
+        function setupUserAnnouncementListener() {
+            const announcementDocRef = doc(db, `artifacts/${appId}/public/data/announcements`, 'mainAnnouncement');
+            onSnapshot(announcementDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const publishTime = data.publishAt ? data.publishAt.toDate() : null;
+                    const now = new Date();
+
+                    // Logic: display real-time announcement ONLY if it's published now or its scheduled time has passed
+                    if (publishTime && publishTime.getTime() > now.getTime()) {
+                        // Announcement is scheduled for future, show default message
+                        userAnnouncementHeading.textContent = defaultAnnouncementHeading;
+                        userAnnouncementContent.innerHTML = defaultAnnouncementContent;
+                        userAnnouncementTimestamp.classList.add('hidden');
+                    } else {
+                        // Announcement is published (either now or scheduled time passed)
+                        userAnnouncementHeading.textContent = data.heading || defaultAnnouncementHeading;
+                        userAnnouncementContent.innerHTML = (data.content || defaultAnnouncementContent).replace(/\n/g, '<br>');
+                        if (data.showTimestamp && data.publishAt) {
+                            userAnnouncementTimestamp.textContent = `Disiarkan pada: ${formatTimestamp(data.publishAt)}`;
+                            userAnnouncementTimestamp.classList.remove('hidden');
+                        } else {
+                            userAnnouncementTimestamp.classList.add('hidden');
+                        }
+                    }
+                } else {
+                    // No announcement document, show default message
+                    userAnnouncementHeading.textContent = defaultAnnouncementHeading;
+                    userAnnouncementContent.innerHTML = defaultAnnouncementContent;
+                    userAnnouncementTimestamp.classList.add('hidden');
+                }
+            }, (error) => {
+                console.error("Error loading user announcement:", error);
+                // On error, revert to default message
+                userAnnouncementHeading.textContent = defaultAnnouncementHeading;
+                userAnnouncementContent.innerHTML = defaultAnnouncementContent;
+                userAnnouncementTimestamp.classList.add('hidden');
+            });
+        }
+
+
         // Autentikasi Firebase pertama kali saat aplikasi dimuat
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserId = user.uid;
-                // Baris ini dihapus: document.getElementById('currentUserId').textContent = currentUserId;
                 console.log("Firebase authenticated with user ID:", currentUserId);
                 
-                // Set isAdminLoggedIn berdasarkan UID yang login.
-                // Ini penting agar fetchAndDisplayAdminData tidak mencoba fetch sebelum user terautentikasi dan isAdminLoggedIn terdefinisi.
                 isAdminLoggedIn = ADMIN_UIDS.includes(currentUserId);
                 
                 setupRankingListeners(); // Ini akan memicu listener data
+                setupUserAnnouncementListener(); // Setup listener untuk pengumuman di pop-up user
+                // startCountdownUpdate() hanya akan dipanggil saat admin masuk ke halaman announcementManagementPage
+                // di event listener goToAnnouncementManagementBtn.
             } else {
                 // Jika tidak ada user yang login, coba login secara anonim
                 try {
-                    // Hanya panggil signInAnonymously() jika belum ada user yang login
-                    // __initial_auth_token tidak digunakan di GitHub Pages
                     await signInAnonymously(auth);
                     console.log("Signed in anonymously.");
                 } catch (error) {
@@ -1001,7 +1592,7 @@
         });
 
         // Pemuatan halaman awal: Tampilkan modal pengumuman terlebih dahulu
-        // homePage.classList.add('hidden'); // Pastikan homepage tersembunyi secara default (opsional, sudah dihandle oleh showPage)
+        // Default content already there, setupUserAnnouncementListener will update it
         announcementModal.classList.remove('hidden'); // Pastikan modal pengumuman terlihat
 
         // Pastikan header mengambil ruang (untuk min-h-screen-minus-header)
@@ -1017,3 +1608,4 @@
     </script>
 </body>
 </html>
+
