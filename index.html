@@ -251,8 +251,8 @@
     </header>
 
     <div class="container">
-        <!-- Homepage -->
-        <div id="homePage" class="hidden flex flex-col items-center justify-center min-h-screen-minus-header">
+        <!-- Homepage - NOW VISIBLE BY DEFAULT -->
+        <div id="homePage" class="flex flex-col items-center justify-center min-h-screen-minus-header">
             <h3 class="text-2xl font-bold mb-8 text-center">Hasil Perolehan Ballot<br>Silakan Pilih Tindakan</h3>
             <div class="space-y-4">
                 <button id="viewBallotBtn" class="btn btn-primary w-full md:w-auto">
@@ -375,7 +375,7 @@
                         <table class="min-w-full bg-white rounded-lg shadow">
                             <thead>
                                 <tr>
-                                    <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">No</th>
+                                    <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tl-lg">Nama Sekolah</th>
                                     <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider">Poin</th>
                                     <th class="py-3 px-4 text-sm font-medium text-gray-600 uppercase tracking-wider rounded-tr-lg">Aksi</th>
                                 </tr>
@@ -593,7 +593,7 @@
         </div>
     </div>
 
-    <!-- Announcement Modal (User-facing Pop-up) -->
+    <!-- Announcement Modal (User-facing Pop-up) - HIDDEN BY DEFAULT -->
     <div id="announcementModal" class="modal-overlay hidden">
         <div class="modal-content w-full max-w-sm p-6">
             <h4 id="userAnnouncementHeading" class="text-2xl font-bold text-indigo-700 mb-4">Informasi</h4>
@@ -804,4 +804,857 @@
 
         // --- Delete Modal Functions ---
         function showDeleteModal(name, type, id) {
-            schoolToDeleteType = t
+            schoolToDeleteType = type;
+            schoolToDeleteId = id;
+            deleteSchoolNameSpan.textContent = name;
+            deleteModal.classList.remove('hidden');
+        }
+
+        function hideDeleteModal() {
+            schoolToDeleteType = null;
+            schoolToDeleteId = null;
+            deleteSchoolNameSpan.textContent = '';
+            deleteModal.classList.add('hidden');
+        }
+
+        // --- Global Action Loading Functions ---
+        function showActionLoading(message = "Tunggu Sebentar...") {
+            actionLoadingOverlay.querySelector('p').textContent = message;
+            actionLoadingOverlay.classList.remove('hidden');
+        }
+
+        function hideActionLoading() {
+            actionLoadingOverlay.classList.add('hidden');
+        }
+
+        // --- Utility for Formatting Date ---
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return '-';
+            let date;
+            if (timestamp.toDate) { // Firestore Timestamp object
+                date = timestamp.toDate();
+            } else if (timestamp instanceof Date) { // Standard Date object
+                date = timestamp;
+            } else {
+                return '-'; // Invalid timestamp format
+            }
+            return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' ' +
+                   date.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function formatDateOnly(timestamp) {
+            if (!timestamp) return '-';
+            let date;
+            if (timestamp.toDate) {
+                date = timestamp.toDate();
+            } else if (timestamp instanceof Date) {
+                date = timestamp;
+            } else {
+                return '-';
+            }
+            return date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        function formatTimeOnly(timestamp) {
+            if (!timestamp) return '-';
+            let date;
+            if (timestamp.toDate) {
+                date = timestamp.toDate();
+            } else if (timestamp instanceof Date) {
+                date = timestamp;
+            } else {
+                return '-';
+            }
+            return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        // --- Event Listeners ---
+        viewBallotBtn.addEventListener('click', () => {
+            showPage(rankingPage);
+            loadingAnimation.classList.remove('hidden'); // Show ranking page specific loading
+            rankingContent.classList.add('hidden');
+            setTimeout(() => {
+                renderFilteredRankings();
+                hideLoadingAndShowContent();
+            }, 1000);
+        });
+
+        loginBtn.addEventListener('click', () => {
+            if (isAdminLoggedIn) {
+                showPage(adminPage); // Go to Admin Hub if already logged in
+            } else {
+                showPage(loginPage);
+                loginError.classList.add('hidden');
+                usernameInput.value = '';
+                passwordInput.value = '';
+            }
+        });
+
+        // Admin Hub Navigation
+        goToBallotInputBtn.addEventListener('click', () => {
+            showAdminSubPage(ballotInputPage);
+            fetchAndDisplayAdminData('smp_mts_schools', smpTableBody);
+            fetchAndDisplayAdminData('sma_smk_ma_schools', smaTableBody);
+        });
+
+        goToAnnouncementManagementBtn.addEventListener('click', () => {
+            showAdminSubPage(announcementManagementPage);
+            loadCurrentAnnouncementForAdminEdit(); // Load current announcement for editing
+            updateAnnouncementDisplayForAdmin(); // Initial call to update countdown if any
+            startCountdownUpdate(); // Start countdown update interval
+        });
+
+        // Back buttons
+        backToHomeFromLogin.addEventListener('click', () => showPage(homePage));
+        backToHomeFromRanking.addEventListener('click', () => {
+            currentSearchQuery = '';
+            schoolSearchInput.value = '';
+            showPage(homePage);
+        });
+
+        // Back to Admin Hub buttons on sub-pages
+        backToAdminHubFromBallotBtn.addEventListener('click', () => showPage(adminPage));
+        backToAdminHubFromAnnouncementBtn.addEventListener('click', () => showPage(adminPage));
+
+        // Back to Home button on main Admin Hub
+        backToHomeFromAdminHubBtn.addEventListener('click', () => showPage(homePage));
+
+        // Logout buttons (all trigger the same logout flow)
+        logoutBtn.addEventListener('click', () => showLogoutModal()); // Main admin hub logout
+        logoutFromBallotBtn.addEventListener('click', () => showLogoutModal());
+        logoutFromAnnouncementBtn.addEventListener('click', () => showLogoutModal());
+
+
+        confirmLogoutBtn.addEventListener('click', async () => {
+            showActionLoading("Melakukan Logout...");
+            try {
+                await signOut(auth);
+                isAdminLoggedIn = false;
+                hideLogoutModal();
+                showPage(homePage);
+                showToast("Berhasil logout.");
+            } catch (error) {
+                console.error("Error logging out:", error);
+                showToast("Gagal logout. Coba lagi.");
+            } finally {
+                hideActionLoading();
+            }
+        });
+
+        cancelLogoutBtn.addEventListener('click', () => {
+            hideLogoutModal();
+        });
+
+        confirmDeleteBtn.addEventListener('click', async () => {
+            if (schoolToDeleteType && schoolToDeleteId) {
+                showActionLoading("Menghapus Data...");
+                await executeDeleteSchool(schoolToDeleteType, schoolToDeleteId);
+                hideActionLoading();
+            }
+            hideDeleteModal();
+        });
+
+        cancelDeleteBtn.addEventListener('click', () => {
+            hideDeleteModal();
+        });
+
+        submitLoginBtn.addEventListener('click', async () => {
+            showActionLoading("Mencoba Login...");
+            const email = usernameInput.value;
+            const password = passwordInput.value;
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log("Login berhasil! UID:", userCredential.user.uid);
+                
+                isAdminLoggedIn = ADMIN_UIDS.includes(userCredential.user.uid);
+                
+                if (!isAdminLoggedIn) {
+                    showToast("Login berhasil, tetapi Anda bukan admin yang terdaftar.");
+                    await signOut(auth); 
+                    showPage(homePage);
+                    return;
+                }
+
+                showPage(adminPage); // Go to Admin Hub
+                loginError.classList.add('hidden');
+                showToast("Login Admin Berhasil!");
+            } catch (error) {
+                console.error("Login gagal:", error.code, error.message);
+                loginError.classList.remove('hidden');
+                showToast("Login gagal. Username atau password salah!");
+            } finally {
+                hideActionLoading();
+            }
+        });
+
+        schoolSearchInput.addEventListener('input', (e) => {
+            currentSearchQuery = e.target.value;
+            renderFilteredRankings();
+        });
+
+        // Toggle schedule time input visibility
+        publishNowCheckbox.addEventListener('change', () => {
+            if (publishNowCheckbox.checked) {
+                scheduleTimeSection.classList.add('hidden');
+                scheduledPublishTimeInput.value = ''; // Clear scheduled time if publish now is checked
+            } else {
+                scheduleTimeSection.classList.remove('hidden');
+            }
+        });
+
+
+        // --- Firestore Operations (Admin) ---
+
+        async function addSchool(type, name, points) {
+            if (!isAdminLoggedIn || !ADMIN_UIDS.includes(currentUserId)) {
+                showToast("Anda tidak memiliki izin untuk menambah data. Silakan login sebagai admin.");
+                return;
+            }
+            if (!name || isNaN(points) || points === '') {
+                showToast("Nama sekolah dan poin tidak boleh kosong.");
+                return;
+            }
+            const parsedPoints = parseInt(points);
+            if (parsedPoints < 0) {
+                 showToast("Poin tidak boleh negatif.");
+                 return;
+            }
+            if (currentUserId === null) {
+                showToast("Autentikasi belum siap. Coba lagi.");
+                return;
+            }
+
+            showActionLoading("Menyimpan Data Ballot...");
+            const collectionPath = `artifacts/${appId}/public/data/${type}`;
+            const schoolRef = doc(db, collectionPath, name.trim());
+
+            try {
+                await setDoc(schoolRef, {
+                    name: name.trim(),
+                    points: parsedPoints,
+                    lastUpdated: serverTimestamp() // Gunakan serverTimestamp
+                }, { merge: true });
+                showToast(`Data ${name.trim()} berhasil ditambahkan/diperbarui.`);
+                if (type === 'smp_mts_schools') {
+                    smpNameInput.value = '';
+                    smpPointsInput.value = '';
+                } else {
+                    smaNameInput.value = '';
+                    smaPointsInput.value = '';
+                }
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                showToast("Gagal menambahkan/memperbarui data. Periksa izin Anda.");
+            } finally {
+                hideActionLoading();
+            }
+        }
+
+        async function executeDeleteSchool(type, docId) {
+            if (!isAdminLoggedIn || !ADMIN_UIDS.includes(currentUserId)) {
+                showToast("Anda tidak memiliki izin untuk menghapus data. Silakan login sebagai admin.");
+                return;
+            }
+            if (currentUserId === null) {
+                showToast("Autentikasi belum siap. Coba lagi.");
+                return;
+            }
+
+            const collectionPath = `artifacts/${appId}/public/data/${type}`;
+            try {
+                await deleteDoc(doc(db, collectionPath, docId));
+                showToast(`Data ${docId} berhasil dihapus.`);
+            } catch (e) {
+                console.error("Error removing document: ", e);
+                showToast("Gagal menghapus data. Periksa izin Anda.");
+            }
+        }
+
+        function fetchAndDisplayAdminData(collectionName, tableBodyElement) {
+            if (currentUserId === null) {
+                console.log("Firebase not yet authenticated for admin data fetch.");
+                return;
+            }
+            if (!isAdminLoggedIn || !ADMIN_UIDS.includes(currentUserId)) {
+                tableBodyElement.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Anda tidak memiliki izin untuk melihat data ini.</td></tr>`;
+                return;
+            }
+
+            const q = collection(db, `artifacts/${appId}/public/data/${collectionName}`);
+            onSnapshot(q, (snapshot) => {
+                const schools = []; // Define schools locally within the callback
+                let latestUpdateTimestamp = null;
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    schools.push({ id: doc.id, ...data });
+                    if (data.lastUpdated && (!latestUpdateTimestamp || data.lastUpdated.toDate() > latestUpdateTimestamp.toDate())) {
+                        latestUpdateTimestamp = data.lastUpdated;
+                    }
+                });
+
+                schools.sort((a, b) => a.name.localeCompare(b.name));
+
+                tableBodyElement.innerHTML = '';
+                if (schools.length === 0) {
+                    tableBodyElement.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Belum ada data sekolah.</td></tr>`;
+                    if (collectionName === 'smp_mts_schools') {
+                        smpAdminLastUpdated.textContent = 'Diperbarui pada: -';
+                    } else if (collectionName === 'sma_smk_ma_schools') {
+                        smaAdminLastUpdated.textContent = 'Diperbarui pada: -';
+                    }
+                    return;
+                }
+
+                schools.forEach(school => {
+                    const row = tableBodyElement.insertRow();
+                    row.innerHTML = `
+                        <td class="py-2 px-4 text-sm">${school.name}</td>
+                        <td class="py-2 px-4 text-sm">${school.points}</td>
+                        <td class="py-2 px-4 text-sm flex space-x-2">
+                            <button data-id="${school.id}" data-name="${school.name}" data-points="${school.points}" class="edit-btn text-blue-600 hover:text-blue-800 font-semibold">Edit</button>
+                            <button data-id="${school.id}" data-name="${school.name}" class="delete-btn text-red-600 hover:text-red-800 font-semibold">Hapus</button>
+                        </td>
+                    `;
+                });
+
+                if (collectionName === 'smp_mts_schools') {
+                    smpAdminLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
+                } else if (collectionName === 'sma_smk_ma_schools') {
+                    smaAdminLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
+                }
+
+                tableBodyElement.querySelectorAll('.edit-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const id = e.target.dataset.id;
+                        const name = e.target.dataset.name;
+                        const points = e.target.dataset.points;
+                        if (collectionName === 'smp_mts_schools') {
+                            smpNameInput.value = name;
+                            smpPointsInput.value = points;
+                            smpNameInput.focus();
+                            showToast(`Mengedit: ${name}`);
+                        } else if (collectionName === 'sma_smk_ma_schools') {
+                            smaNameInput.value = name;
+                            smaPointsInput.value = points;
+                            smaNameInput.focus();
+                            showToast(`Mengedit: ${name}`);
+                        }
+                    });
+                });
+
+                tableBodyElement.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const id = e.target.dataset.id;
+                        const name = e.target.dataset.name;
+                        showDeleteModal(name, collectionName, id);
+                    });
+                });
+            }, (error) => {
+                console.error("Error listening to admin data:", error);
+                showToast("Gagal memuat data admin.");
+            });
+        }
+
+
+        addSmpBtn.addEventListener('click', () => {
+            addSchool('smp_mts_schools', smpNameInput.value, smpPointsInput.value);
+        });
+
+        addSmaBtn.addEventListener('click', () => {
+            addSchool('sma_smk_ma_schools', smaNameInput.value, smaPointsInput.value);
+        });
+
+        // --- Announcement Management Functions ---
+
+        // Load current announcement for admin to edit
+        function loadCurrentAnnouncementForAdminEdit() {
+            const announcementDocRef = doc(db, `artifacts/${appId}/public/data/announcements`, 'mainAnnouncement');
+            onSnapshot(announcementDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    currentAnnouncement = data; // Store data globally
+                    announcementHeadingInput.value = data.heading || '';
+                    announcementContentInput.value = data.content || '';
+                    includeTimestampCheckbox.checked = data.showTimestamp || false;
+
+                    // Handle scheduling
+                    if (data.publishAt && data.publishAt.toDate) { // If a publishAt timestamp exists
+                        const publishDate = data.publishAt.toDate();
+                        if (publishDate.getTime() > new Date().getTime()) { // If scheduled for future
+                            publishNowCheckbox.checked = false;
+                            scheduleTimeSection.classList.remove('hidden');
+                            // Format date for datetime-local input (YYYY-MM-DDTHH:mm)
+                            scheduledPublishTimeInput.value = publishDate.toISOString().substring(0, 16);
+                        } else { // Already published (or publish now)
+                            publishNowCheckbox.checked = true;
+                            scheduleTimeSection.classList.add('hidden');
+                            scheduledPublishTimeInput.value = '';
+                        }
+                    } else { // No specific publishAt, assume publish now
+                        publishNowCheckbox.checked = true;
+                        scheduleTimeSection.classList.add('hidden');
+                        scheduledPublishTimeInput.value = '';
+                    }
+                } else {
+                    // No announcement yet, clear form
+                    currentAnnouncement = null;
+                    announcementHeadingInput.value = '';
+                    announcementContentInput.value = '';
+                    publishNowCheckbox.checked = true; // Default to publish now
+                    scheduleTimeSection.classList.add('hidden');
+                    scheduledPublishTimeInput.value = '';
+                    includeTimestampCheckbox.checked = true; // Default to include timestamp
+                }
+                updateAnnouncementDisplayForAdmin(); // Update right panel for admin
+            }, (error) => {
+                console.error("Error loading announcement for admin:", error);
+                showToast("Gagal memuat informasi untuk admin.");
+            });
+        }
+
+        // Display current announcement in the right panel of admin page
+        function updateAnnouncementDisplayForAdmin() {
+            if (!currentAnnouncement) {
+                displayAnnouncementHeading.textContent = "Tidak Ada Informasi Saat Ini";
+                displayAnnouncementContent.textContent = "Belum ada pengumuman yang disiarkan.";
+                displayAnnouncementTimestamp.classList.add('hidden');
+                announcementInfoPopup.textContent = "Tidak ada informasi aktif.";
+                editCurrentAnnouncementBtn.disabled = true;
+                deleteCurrentAnnouncementBtn.disabled = true;
+                return;
+            }
+
+            editCurrentAnnouncementBtn.disabled = false;
+            deleteCurrentAnnouncementBtn.disabled = false;
+
+            displayAnnouncementHeading.textContent = currentAnnouncement.heading || 'Tanpa Heading';
+            // Replace newlines with <br> for proper display in HTML
+            displayAnnouncementContent.innerHTML = (currentAnnouncement.content || 'Tidak ada konten').replace(/\n/g, '<br>');
+
+            if (currentAnnouncement.showTimestamp && currentAnnouncement.publishAt) {
+                const publishDate = currentAnnouncement.publishAt.toDate();
+                displayAnnouncementTimestamp.textContent = `Disiarkan: ${formatTimestamp(publishDate)}`;
+                displayAnnouncementTimestamp.classList.remove('hidden');
+            } else {
+                displayAnnouncementTimestamp.classList.add('hidden');
+            }
+
+            // Update info popup for admin
+            let infoText = "";
+            if (currentAnnouncement.publishAt) {
+                const publishDate = currentAnnouncement.publishAt.toDate();
+                const now = new Date();
+                if (publishDate.getTime() > now.getTime()) {
+                    // Scheduled for future
+                    const timeLeft = publishDate.getTime() - now.getTime();
+                    const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                    
+                    let countdownString = `Dalam `;
+                    if (days > 0) countdownString += `${days}h `;
+                    if (hours > 0) countdownString += `${hours}j `;
+                    if (minutes > 0) countdownString += `${minutes}m `;
+                    countdownString += `${seconds}d`; // Always show seconds
+
+                    infoText += `Dijadwalkan: ${formatTimestamp(publishDate)} (${countdownString.trim()})\n`;
+                    infoText += `Status: Belum Disiarkan`;
+                } else {
+                    infoText += `Disiarkan: ${formatTimestamp(publishDate)}\n`;
+                    infoText += `Status: Sudah Disiarkan`;
+                }
+            } else {
+                 infoText += `Status: Tidak Ada Timestamp`; // Should not happen with current logic, but good fallback
+            }
+            if (currentAnnouncement.lastEditedBy) {
+                 infoText += `\nTerakhir diedit oleh: ${currentAnnouncement.lastEditedBy}`;
+            }
+            announcementInfoPopup.innerHTML = infoText.replace(/\n/g, '<br>');
+        }
+        
+        // Update countdown for admin display every second
+        let countdownInterval;
+        function startCountdownUpdate() {
+            if (countdownInterval) clearInterval(countdownInterval); // Clear existing interval
+            countdownInterval = setInterval(() => {
+                if (announcementManagementPage.classList.contains('active')) { // Only update if admin is on the page
+                    updateAnnouncementDisplayForAdmin();
+                } else {
+                    clearInterval(countdownInterval); // Stop if admin leaves the page
+                }
+            }, 1000);
+        }
+
+        saveAnnouncementBtn.addEventListener('click', async () => {
+            if (!isAdminLoggedIn || !ADMIN_UIDS.includes(currentUserId)) {
+                showToast("Anda tidak memiliki izin untuk menyimpan informasi.");
+                return;
+            }
+
+            const heading = announcementHeadingInput.value.trim();
+            const content = announcementContentInput.value.trim();
+            const showTimestamp = includeTimestampCheckbox.checked;
+            const publishNow = publishNowCheckbox.checked;
+
+            if (!heading || !content) {
+                showToast("Heading dan Pengumuman tidak boleh kosong.");
+                return;
+            }
+
+            let publishAtTimestamp;
+            if (publishNow) {
+                publishAtTimestamp = serverTimestamp(); // Set to server current time
+            } else {
+                const scheduledTime = scheduledPublishTimeInput.value;
+                if (!scheduledTime) {
+                    showToast("Harap masukkan tanggal dan waktu untuk jadwal siaran.");
+                    return;
+                }
+                const localDate = new Date(scheduledTime);
+                if (isNaN(localDate.getTime())) {
+                    showToast("Format tanggal/waktu tidak valid.");
+                    return;
+                }
+                // Pastikan waktu yang dijadwalkan tidak di masa lalu jika tidak disiarkan sekarang
+                if (localDate.getTime() < new Date().getTime()) {
+                    showToast("Waktu penjadwalan tidak bisa di masa lalu.");
+                    return;
+                }
+                publishAtTimestamp = localDate; // Store as Date object, Firestore will convert
+            }
+
+            showActionLoading("Menyimpan Informasi...");
+            const announcementDocRef = doc(db, `artifacts/${appId}/public/data/announcements`, 'mainAnnouncement');
+
+            try {
+                await setDoc(announcementDocRef, {
+                    heading: heading,
+                    content: content,
+                    showTimestamp: showTimestamp,
+                    publishAt: publishAtTimestamp,
+                    lastEditedBy: auth.currentUser ? auth.currentUser.email : 'Unknown' // Store admin's email
+                });
+                showToast("Informasi berhasil disimpan.");
+                // loadCurrentAnnouncementForAdminEdit() will be triggered by onSnapshot and refresh
+            } catch (e) {
+                console.error("Error saving announcement: ", e);
+                showToast("Gagal menyimpan informasi. Coba lagi.");
+            } finally {
+                hideActionLoading();
+            }
+        });
+
+        editCurrentAnnouncementBtn.addEventListener('click', () => {
+            if (currentAnnouncement) {
+                announcementHeadingInput.value = currentAnnouncement.heading || '';
+                announcementContentInput.value = currentAnnouncement.content || '';
+                includeTimestampCheckbox.checked = currentAnnouncement.showTimestamp || false;
+
+                if (currentAnnouncement.publishAt && currentAnnouncement.publishAt.toDate) {
+                    const publishDate = currentAnnouncement.publishAt.toDate();
+                    // Check if the scheduled time is in the future.
+                    // If it's in the past or current, treat as "publish now"
+                    if (publishDate.getTime() > new Date().getTime()) {
+                        publishNowCheckbox.checked = false;
+                        scheduleTimeSection.classList.remove('hidden');
+                        scheduledPublishTimeInput.value = publishDate.toISOString().substring(0, 16);
+                    } else {
+                        publishNowCheckbox.checked = true;
+                        scheduleTimeSection.classList.add('hidden');
+                        scheduledPublishTimeInput.value = '';
+                    }
+                } else {
+                    publishNowCheckbox.checked = true; // Default to publish now if no publishAt
+                    scheduleTimeSection.classList.add('hidden');
+                    scheduledPublishTimeInput.value = '';
+                }
+                showToast("Informasi dimuat ke form untuk diedit.");
+            } else {
+                showToast("Tidak ada informasi untuk diedit.");
+            }
+        });
+
+        deleteCurrentAnnouncementBtn.addEventListener('click', async () => {
+            if (!currentAnnouncement) {
+                showToast("Tidak ada informasi untuk dihapus.");
+                return;
+            }
+            if (!isAdminLoggedIn || !ADMIN_UIDS.includes(currentUserId)) {
+                showToast("Anda tidak memiliki izin untuk menghapus informasi. Silakan login sebagai admin.");
+                return;
+            }
+
+            const confirmationMessage = `Yakin ingin menghapus informasi "${currentAnnouncement.heading || 'Tanpa Heading'}"? Tindakan ini tidak dapat dipulihkan!`;
+            // Re-use deleteModal and its elements
+            deleteModal.querySelector('.modal-content h4').textContent = "Konfirmasi Penghapusan Informasi";
+            deleteModal.querySelector('p.mb-6').innerHTML = confirmationMessage;
+            
+            // Temporarily replace the confirm delete handler
+            const originalConfirmHandler = confirmDeleteBtn.onclick; 
+            const originalCancelHandler = cancelDeleteBtn.onclick;
+
+            confirmDeleteBtn.onclick = async () => {
+                showActionLoading("Menghapus Informasi...");
+                const announcementDocRef = doc(db, `artifacts/${appId}/public/data/announcements`, 'mainAnnouncement');
+                try {
+                    await deleteDoc(announcementDocRef);
+                    showToast("Informasi berhasil dihapus.");
+                    // currentAnnouncement will be set to null by onSnapshot callback
+                    // and the user-facing modal will revert to default
+                } catch (e) {
+                    console.error("Error deleting announcement: ", e);
+                    showToast("Gagal menghapus informasi. Coba lagi.");
+                } finally {
+                    hideActionLoading();
+                    hideDeleteModal();
+                    // Restore original handlers
+                    confirmDeleteBtn.onclick = originalConfirmHandler; 
+                    cancelDeleteBtn.onclick = originalCancelHandler;
+                }
+            };
+            cancelDeleteBtn.onclick = () => {
+                hideDeleteModal();
+                // Restore original handlers
+                confirmDeleteBtn.onclick = originalConfirmHandler; 
+                cancelDeleteBtn.onclick = originalCancelHandler;
+            };
+
+            deleteModal.classList.remove('hidden'); // Show the modal
+        });
+
+        clearAnnouncementBtn.addEventListener('click', () => {
+            announcementHeadingInput.value = '';
+            announcementContentInput.value = '';
+            publishNowCheckbox.checked = true;
+            scheduleTimeSection.classList.add('hidden');
+            scheduledPublishTimeInput.value = '';
+            includeTimestampCheckbox.checked = true;
+            showToast("Form informasi dibersihkan.");
+        });
+
+        // --- Ranking Display (Real-time with onSnapshot) ---
+
+        function setupRankingListeners() {
+            if (currentUserId === null) return;
+            isAdminLoggedIn = ADMIN_UIDS.includes(currentUserId); 
+
+            const smpQuery = collection(db, `artifacts/${appId}/public/data/smp_mts_schools`);
+            const smaQuery = collection(db, `artifacts/${appId}/public/data/sma_smk_ma_schools`);
+
+            onSnapshot(smpQuery, (snapshot) => {
+                const schools = []; // Define schools locally within the callback
+                let latestUpdateTimestamp = null;
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    schools.push({ id: doc.id, ...data });
+                    if (data.lastUpdated && (!latestUpdateTimestamp || data.lastUpdated.toDate() > latestUpdateTimestamp.toDate())) {
+                        latestUpdateTimestamp = data.lastUpdated;
+                    }
+                });
+                smpSchoolsData = schools; // Assign to global variable
+                smpRankingLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
+                renderFilteredRankings();
+            }, (error) => {
+                console.error("Error listening to SMP/MTs ranking:", error);
+                showToast("Gagal memuat ranking SMP/MTs.");
+            });
+
+            onSnapshot(smaQuery, (snapshot) => {
+                const schools = []; // Define schools locally within the callback
+                let latestUpdateTimestamp = null;
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    schools.push({ id: doc.id, ...data });
+                    if (data.lastUpdated && (!latestUpdateTimestamp || data.lastUpdated.toDate() > latestUpdateTimestamp.toDate())) {
+                        latestUpdateTimestamp = data.lastUpdated;
+                    }
+                });
+                smaSchoolsData = schools; // Assign to global variable
+                smaRankingLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
+                renderFilteredRankings();
+            }, (error) => {
+                console.error("Error listening to SMA/SMK/MA ranking:", error);
+                showToast("Gagal memuat ranking SMA/SMK/MA.");
+            });
+        }
+
+
+        function renderFilteredRankings() {
+            const filteredSmp = smpSchoolsData.filter(school =>
+                school.name.toLowerCase().includes(currentSearchQuery.toLowerCase())
+            );
+            const filteredSma = smaSchoolsData.filter(school =>
+                school.name.toLowerCase().includes(currentSearchQuery.toLowerCase())
+            );
+
+            filteredSmp.sort((a, b) => b.points - a.points);
+            filteredSma.sort((a, b) => b.points - a.points);
+
+            renderRankingTable(filteredSmp, displaySmpRanking);
+            renderRankingTable(filteredSma, displaySmaRanking);
+
+            hideLoadingAndShowContent();
+        }
+
+        function renderRankingTable(schools, tableBodyElement) {
+            tableBodyElement.innerHTML = '';
+            if (schools.length === 0) {
+                tableBodyElement.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Belum ada data ranking.</td></tr>`;
+                return;
+            }
+
+            schools.forEach((school, index) => {
+                const row = tableBodyElement.insertRow();
+                row.classList.add('ranking-item');
+                if (index === 0 && schools[0].points > 0) {
+                    row.classList.add('top-rank');
+                }
+                row.innerHTML = `
+                    <td class="py-2 px-4 text-sm">${index + 1}</td>
+                    <td class="py-2 px-4 text-sm">${school.name}</td>
+                    <td class="py-2 px-4 text-sm">${school.points}</td>
+                `;
+            });
+        }
+
+        function hideLoadingAndShowContent() {
+            loadingAnimation.classList.add('hidden');
+            rankingContent.classList.remove('hidden');
+        }
+
+        // --- User-Facing Announcement Logic ---
+        function setupUserAnnouncementListener() {
+            const announcementDocRef = doc(db, `artifacts/${appId}/public/data/announcements`, 'mainAnnouncement');
+            onSnapshot(announcementDocRef, (docSnap) => {
+                let currentFetchedHeading = defaultAnnouncementHeading;
+                let currentFetchedContentRaw = defaultAnnouncementContent;
+                let currentFetchedTimestampText = "";
+                let currentFetchedTimestampVisible = false;
+                let currentFetchedIsActive = false; // True if this fetch *would* display an admin-published announcement
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const publishTime = data.publishAt ? data.publishAt.toDate() : null;
+                    const now = new Date();
+
+                    if (publishTime && publishTime.getTime() <= now.getTime()) { // Is published
+                        currentFetchedHeading = data.heading || defaultAnnouncementHeading;
+                        currentFetchedContentRaw = data.content || defaultAnnouncementContent;
+                        if (data.showTimestamp) { // Use data.showTimestamp directly
+                            currentFetchedTimestampText = `Disiarkan pada: ${formatTimestamp(data.publishAt)}`;
+                            currentFetchedTimestampVisible = true;
+                        }
+                        currentFetchedIsActive = true;
+                    }
+                }
+
+                // Apply fetched content to the modal elements (regardless of visibility)
+                userAnnouncementHeading.textContent = currentFetchedHeading;
+                userAnnouncementContent.innerHTML = currentFetchedContentRaw.replace(/\n/g, '<br>');
+                userAnnouncementTimestamp.textContent = currentFetchedTimestampText;
+                if (currentFetchedTimestampVisible) {
+                    userAnnouncementTimestamp.classList.remove('hidden');
+                } else {
+                    userAnnouncementTimestamp.classList.add('hidden');
+                }
+
+                // Decide modal visibility based on the fetched announcement status
+                const isModalCurrentlyHidden = announcementModal.classList.contains('hidden');
+
+                // Condition 1: A custom announcement just became active
+                const becameActiveNow = currentFetchedIsActive && !previousUserAnnouncementIsActive;
+
+                // Condition 2: An existing active announcement's content (heading or content) changed
+                const activeContentChanged = currentFetchedIsActive && previousUserAnnouncementIsActive &&
+                                             (currentFetchedHeading !== previousUserAnnouncementHeading ||
+                                              currentFetchedContentRaw !== previousUserAnnouncementContentRaw);
+
+                // Condition 3: A custom announcement that *was* active is now inactive (deleted or scheduled for future)
+                const becameInactiveNow = !currentFetchedIsActive && previousUserAnnouncementIsActive;
+
+
+                if (becameActiveNow || activeContentChanged) {
+                    announcementModal.classList.remove('hidden'); // Show the modal (pop-up)
+                } else if (becameInactiveNow) {
+                    announcementModal.classList.add('hidden'); // Hide the modal
+                }
+                // If it's already hidden and newIsActive is false (default state), it stays hidden.
+                // If it's already visible and newIsActive is true, and content didn't change (user hasn't closed it yet for this specific announcement), it stays visible.
+
+                // Update previous state for next comparison
+                previousUserAnnouncementHeading = currentFetchedHeading;
+                previousUserAnnouncementContentRaw = currentFetchedContentRaw;
+                previousUserAnnouncementIsActive = currentFetchedIsActive;
+            }, (error) => {
+                console.error("Error loading user announcement:", error);
+                // On error, revert to default message and ensure modal is hidden
+                userAnnouncementHeading.textContent = defaultAnnouncementHeading;
+                userAnnouncementContent.innerHTML = defaultAnnouncementContent;
+                userAnnouncementTimestamp.classList.add('hidden');
+                announcementModal.classList.add('hidden'); // Ensure modal is hidden on error
+                // Reset previous state on error to ensure re-trigger if fixed
+                previousUserAnnouncementHeading = defaultAnnouncementHeading;
+                previousUserAnnouncementContentRaw = defaultAnnouncementContent;
+                previousUserAnnouncementIsActive = false;
+            });
+        }
+
+
+        // Autentikasi Firebase pertama kali saat aplikasi dimuat
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                console.log("Firebase authenticated with user ID:", currentUserId);
+                
+                isAdminLoggedIn = ADMIN_UIDS.includes(currentUserId);
+                
+                setupRankingListeners(); // Ini akan memicu listener data
+                setupUserAnnouncementListener(); // Setup listener untuk pengumuman di pop-up user
+                // startCountdownUpdate() hanya akan dipanggil saat admin masuk ke halaman announcementManagementPage
+                // di event listener goToAnnouncementManagementBtn.
+            } else {
+                // Jika tidak ada user yang login, coba login secara anonim
+                try {
+                    await signInAnonymously(auth);
+                    console.log("Signed in anonymously.");
+                } catch (error) {
+                    console.error("Error signing in anonymously:", error);
+                    showToast("Gagal melakukan autentikasi anonim. Coba lagi.");
+                }
+            }
+        });
+
+        // Event listener untuk menutup modal pengumuman
+        closeAnnouncementBtn.addEventListener('click', () => {
+            announcementModal.classList.add('hidden'); // Sembunyikan modal pengumuman
+
+            // When user explicitly closes, mark the current active announcement (if any) as 'acknowledged'
+            // by setting previous state to current fetched state. This prevents immediate re-pop for the same content.
+            // The `onSnapshot` will continue to run and re-evaluate `shouldShowModal`.
+            // If the content changes OR it moves from inactive to active, it will pop up again.
+            previousUserAnnouncementHeading = userAnnouncementHeading.textContent;
+            previousUserAnnouncementContentRaw = userAnnouncementContent.textContent.replace(/<br>/g, '\n'); // Convert back to raw for accurate comparison
+            previousUserAnnouncementIsActive = (userAnnouncementHeading.textContent !== defaultAnnouncementHeading ||
+                                               userAnnouncementContent.textContent.replace(/<br>/g, '\n') !== defaultAnnouncementContent);
+        });
+
+        // PENTING: Initial page display. Halaman home akan selalu ditampilkan secara default.
+        // Tidak perlu memanggil showPage(homePage) di sini lagi karena sudah diatur di HTML
+        // Jika ada kebutuhan untuk menyembunyikan halaman lain di awal (misal: loginPage), bisa ditambahkan di sini.
+        // Untuk saat ini, asumsikan hanya homePage yang terlihat di awal.
+
+        // Pastikan header mengambil ruang (untuk min-h-screen-minus-header)
+        document.addEventListener('DOMContentLoaded', () => {
+            const headerHeight = document.querySelector('.header').offsetHeight;
+            document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
+        });
+        window.addEventListener('resize', () => {
+            const headerHeight = document.querySelector('.header').offsetHeight;
+            document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
+        });
+
+    </script>
+</body>
+</html>
