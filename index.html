@@ -240,6 +240,15 @@
             opacity: 1;
             pointer-events: auto;
         }
+        /* New styles for display off modal */
+        #displayOffModal .modal-content {
+            background-color: #fef2f2; /* Red-50 */
+            border: 1px solid #ef4444; /* Red-500 */
+            color: #b91c1c; /* Red-700 */
+        }
+        #displayOffModal .modal-content h4 {
+            color: #b91c1c;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -251,7 +260,7 @@
     </header>
 
     <div class="container">
-        <!-- Homepage - NOW VISIBLE BY DEFAULT -->
+        <!-- Homepage -->
         <div id="homePage" class="flex flex-col items-center justify-center min-h-screen-minus-header">
             <h3 class="text-2xl font-bold mb-8 text-center">Hasil Perolehan Ballot<br>Silakan Pilih Tindakan</h3>
             <div class="space-y-4">
@@ -305,25 +314,6 @@
                     </svg>
                     Siarkan Informasi
                 </button>
-                <!-- NEW: Display Control Section -->
-                <div class="w-full bg-white p-6 rounded-xl shadow-md text-center">
-                    <h4 class="text-xl font-semibold mb-4 text-indigo-700">Kontrol Tampilan Ranking</h4>
-                    <p id="displayStatus" class="text-lg font-bold mb-4">Status: Memuat...</p>
-                    <div class="flex justify-center space-x-4">
-                        <button id="activateDisplayBtn" class="btn btn-primary">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                            </svg>
-                            Aktifkan Display Ranking
-                        </button>
-                        <button id="deactivateDisplayBtn" class="btn btn-danger">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                            </svg>
-                            Nonaktifkan Display Ranking
-                        </button>
-                    </div>
-                </div>
             </div>
             <div class="flex flex-col md:flex-row gap-4 mt-8 w-full">
                 <button id="logoutBtn" class="btn btn-secondary w-full md:w-1/2">
@@ -332,7 +322,7 @@
                     </svg>
                     Logout
                 </button>
-                <!-- NEW: Back to Home Button on Admin Panel -->
+                <!-- Back to Home Button on Admin Panel -->
                 <button id="backToHomeFromAdminHubBtn" class="btn btn-secondary w-full md:w-1/2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
@@ -406,6 +396,28 @@
                     </div>
                 </div>
             </div>
+
+            <!-- NEW: Display Control Section - Moved to Ballot Input Page -->
+            <div class="w-full bg-white p-6 rounded-xl shadow-md text-center mt-6">
+                <h4 class="text-xl font-semibold mb-4 text-indigo-700">Kontrol Tampilan Ranking</h4>
+                <p id="displayStatus" class="text-lg font-bold mb-4">Status: Memuat...</p>
+                <div class="flex flex-col md:flex-row justify-center space-y-2 md:space-y-0 md:space-x-4">
+                    <button id="activateDisplayBtn" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        Aktifkan Display Ranking
+                    </button>
+                    <button id="deactivateDisplayBtn" class="btn btn-danger">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                        Nonaktifkan Display Ranking
+                    </button>
+                </div>
+            </div>
+
+
             <div class="flex flex-col md:flex-row gap-4 mt-6 w-full">
                 <button id="logoutFromBallotBtn" class="btn btn-secondary w-full md:w-1/2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -453,6 +465,14 @@
                         <input type="checkbox" id="includeTimestampCheckbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked>
                         <label for="includeTimestampCheckbox" class="ml-2 block text-sm font-medium text-gray-900">Sertakan Tanggal dan Jam Informasi Saat Ini</label>
                     </div>
+                    
+                    <!-- NEW: Generate Announcement Button -->
+                    <button id="generateAnnouncementBtn" class="btn btn-secondary w-full mt-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V4a2 2 0 00-2-2H6zM4 14a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2zM14 4a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V6a2 2 0 00-2-2h-2zM12 14a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2a2 2 0 00-2 2v2z" clip-rule="evenodd" />
+                        </svg>
+                        Buat Saran Informasi (AI)
+                    </button>
 
                     <button id="saveAnnouncementBtn" class="btn btn-primary w-full mt-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -523,7 +543,7 @@
         <div id="rankingPage" class="hidden flex flex-col items-center justify-center min-h-screen-minus-header">
             <div id="loadingAnimation" class="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-lg">
                 <div class="loading-spinner mb-4"></div>
-                <p class="text-lg font-medium text-gray-700">Sebentar, ya. Poinnya lagi dimasukin...</p>
+                <p id="loadingText" class="text-lg font-medium text-gray-700">Sebentar, ya. Poinnya lagi dimasukin<span id="loadingDots">...</span></p>
             </div>
 
             <div id="rankingContent" class="hidden w-full">
@@ -624,6 +644,15 @@
         </div>
     </div>
 
+    <!-- NEW: Display Off Modal -->
+    <div id="displayOffModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h4 class="text-2xl font-bold mb-4">Gagal memuat data!</h4>
+            <p class="text-lg mb-6">Display ranking saat ini dinonaktifkan oleh admin.</p>
+            <button id="backToHomeFromDisplayOff" class="btn btn-primary">Kembali ke Beranda</button>
+        </div>
+    </div>
+
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
@@ -655,7 +684,7 @@
         let smaSchoolsData = []; // To store all SMA data from Firestore
         let currentSearchQuery = '';
         let currentAnnouncement = null; // To store the current active announcement
-        let displayRankingActive = true; // NEW: Global state for ranking display visibility
+        let displayRankingActive = true; // Global state for ranking display visibility (default: true)
 
         // Variables for delete modal context
         let schoolToDeleteType = null;
@@ -668,6 +697,7 @@
         const rankingPage = document.getElementById('rankingPage');
         const loadingAnimation = document.getElementById('loadingAnimation'); // For ranking page specific loading
         const rankingContent = document.getElementById('rankingContent');
+        const loadingDots = document.getElementById('loadingDots'); // For dot animation
 
         // Admin Sub-pages
         const ballotInputPage = document.getElementById('ballotInputPage');
@@ -683,14 +713,14 @@
         const goToBallotInputBtn = document.getElementById('goToBallotInputBtn');
         const goToAnnouncementManagementBtn = document.getElementById('goToAnnouncementManagementBtn');
         
-        // NEW: Back to Home Button from Admin Hub
+        // Back to Home Button from Admin Hub
         const backToHomeFromAdminHubBtn = document.getElementById('backToHomeFromAdminHubBtn');
 
-        // NEW: Logout buttons for sub-pages
+        // Logout buttons for sub-pages
         const logoutFromBallotBtn = document.getElementById('logoutFromBallotBtn');
         const logoutFromAnnouncementBtn = document.getElementById('logoutFromAnnouncementBtn');
 
-        // NEW: Back to Admin Hub buttons for sub-pages
+        // Back to Admin Hub buttons for sub-pages
         const backToAdminHubFromBallotBtn = document.getElementById('backToAdminHubFromBallotBtn');
         const backToAdminHubFromAnnouncementBtn = document.getElementById('backToAdminHubFromAnnouncementBtn');
 
@@ -739,6 +769,7 @@
         const includeTimestampCheckbox = document.getElementById('includeTimestampCheckbox');
         const saveAnnouncementBtn = document.getElementById('saveAnnouncementBtn'); 
         const clearAnnouncementBtn = document.getElementById('clearAnnouncementBtn');
+        const generateAnnouncementBtn = document.getElementById('generateAnnouncementBtn'); // Generate button
         
         const currentAnnouncementDisplay = document.getElementById('currentAnnouncementDisplay');
         const displayAnnouncementHeading = document.getElementById('displayAnnouncementHeading');
@@ -772,6 +803,10 @@
         // Firestore document reference for app settings
         const appSettingsDocRef = doc(db, `artifacts/${appId}/public/data/app_settings`, 'display_control');
 
+        // NEW: Display Off Modal Elements
+        const displayOffModal = document.getElementById('displayOffModal');
+        const backToHomeFromDisplayOff = document.getElementById('backToHomeFromDisplayOff');
+
 
         // --- Navigation Functions ---
         function showPage(pageToShow) {
@@ -782,6 +817,7 @@
             rankingPage.classList.add('hidden');
             ballotInputPage.classList.remove('active'); // Hide sub-page
             announcementManagementPage.classList.remove('active'); // Hide sub-page
+            displayOffModal.classList.add('hidden'); // Ensure display off modal is hidden
 
             // Remove flex display from all pages to ensure correct hidden state
             homePage.classList.remove('flex');
@@ -896,15 +932,37 @@
             return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
 
+        // --- Loading Dot Animation ---
+        let dotInterval;
+        function startDotAnimation() {
+            let dots = '';
+            let dotCount = 0;
+            dotInterval = setInterval(() => {
+                dots = '.'.repeat(dotCount % 4); // Cycles . .. ... (empty)
+                loadingDots.textContent = dots;
+                dotCount++;
+            }, 500); // Change dot every 500ms
+        }
+
+        function stopDotAnimation() {
+            clearInterval(dotInterval);
+            loadingDots.textContent = ''; // Clear dots when animation stops
+        }
+
         // --- Event Listeners ---
         viewBallotBtn.addEventListener('click', () => {
             showPage(rankingPage);
-            // The display of loading vs content is now handled within renderFilteredRankings
-            // to account for the displayActive status.
-            loadingAnimation.classList.remove('hidden'); // Show ranking page specific loading
-            rankingContent.classList.add('hidden');
-            // Ranking data will be rendered by the Firestore listeners via renderFilteredRankings
-            // which will also check displayActive status.
+            loadingAnimation.classList.remove('hidden'); // Show loading immediately
+            rankingContent.classList.add('hidden'); // Hide content initially
+            displayOffModal.classList.add('hidden'); // Ensure display off modal is hidden
+            startDotAnimation();
+
+            // Simulate loading time (random between 3 to 5 seconds)
+            const randomLoadTime = Math.floor(Math.random() * (5000 - 3000 + 1)) + 3000;
+            setTimeout(() => {
+                stopDotAnimation();
+                finalizeRankingDisplay(); // Decide what to show after loading
+            }, randomLoadTime);
         });
 
         loginBtn.addEventListener('click', () => {
@@ -923,6 +981,7 @@
             showAdminSubPage(ballotInputPage);
             fetchAndDisplayAdminData('smp_mts_schools', smpTableBody);
             fetchAndDisplayAdminData('sma_smk_ma_schools', smaTableBody);
+            updateAdminDisplayStatusUI(); // Ensure display status is updated on this page
         });
 
         goToAnnouncementManagementBtn.addEventListener('click', () => {
@@ -939,6 +998,7 @@
             schoolSearchInput.value = '';
             showPage(homePage);
         });
+        backToHomeFromDisplayOff.addEventListener('click', () => showPage(homePage)); // NEW: for Display Off Modal
 
         // Back to Admin Hub buttons on sub-pages
         backToAdminHubFromBallotBtn.addEventListener('click', () => showPage(adminPage));
@@ -1007,8 +1067,8 @@
                 showPage(adminPage); // Go to Admin Hub
                 loginError.classList.add('hidden');
                 showToast("Login Admin Berhasil!");
-            } catch (error) {
-                console.error("Login gagal:", error.code, error.message);
+            } catch (e) {
+                console.error("Login gagal:", e.code, e.message);
                 loginError.classList.remove('hidden');
                 showToast("Login gagal. Username atau password salah!");
             } finally {
@@ -1462,6 +1522,76 @@
             showToast("Form informasi dibersihkan.");
         });
 
+        // --- LLM Integration for Announcement Generation ---
+        generateAnnouncementBtn.addEventListener('click', async () => {
+            if (!isAdminLoggedIn || !ADMIN_UIDS.includes(currentUserId)) {
+                showToast("Anda tidak memiliki izin untuk membuat saran informasi AI.");
+                return;
+            }
+
+            const promptText = prompt("Masukkan ide atau topik singkat untuk pengumuman (misal: 'hasil lomba', 'peringatan acara', 'info pendaftaran'):");
+            if (!promptText) {
+                showToast("Pembuatan dibatalkan.");
+                return;
+            }
+
+            showActionLoading("Membuat saran informasi AI...");
+            try {
+                let chatHistory = [];
+                // Construct the prompt to guide the LLM
+                const llmPrompt = `Buatkan saya sebuah draf pengumuman resmi dan singkat (maksimal 2-3 paragraf) untuk aplikasi ranking ballot. Pengumuman ini akan ditampilkan kepada pengguna.
+                Topiknya adalah: "${promptText}".
+                Sertakan judul pengumuman yang relevan. Pisahkan judul dan isi pengumuman dengan tanda '---JUDUL_PEMISAH---'.`;
+
+                chatHistory.push({ role: "user", parts: [{ text: llmPrompt }] });
+
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // Canvas will automatically provide this during runtime
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const generatedText = result.candidates[0].content.parts[0].text;
+                    
+                    const parts = generatedText.split('---JUDUL_PEMISAH---');
+                    let generatedHeading = "Pengumuman";
+                    let generatedContent = generatedText;
+
+                    if (parts.length > 1) {
+                        generatedHeading = parts[0].trim();
+                        generatedContent = parts.slice(1).join('---JUDUL_PEMISAH---').trim();
+                    } else if (generatedText.includes('\n')) {
+                        // If no specific separator but has newlines, try to guess heading from first line
+                        const firstLineBreak = generatedText.indexOf('\n');
+                        generatedHeading = generatedText.substring(0, firstLineBreak).trim();
+                        generatedContent = generatedText.substring(firstLineBreak + 1).trim();
+                    }
+
+                    announcementHeadingInput.value = generatedHeading;
+                    announcementContentInput.value = generatedContent;
+                    showToast("Saran informasi AI berhasil dibuat!");
+                } else {
+                    showToast("Gagal mendapatkan saran informasi AI. Coba lagi.");
+                    console.error("Unexpected LLM response structure:", result);
+                }
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                showToast("Terjadi kesalahan saat memanggil AI. Periksa koneksi atau coba lagi.");
+            } finally {
+                hideActionLoading();
+            }
+        });
+
+
         // --- Ranking Display (Real-time with onSnapshot) ---
 
         function setupRankingListeners() {
@@ -1472,61 +1602,92 @@
             const smaQuery = collection(db, `artifacts/${appId}/public/data/sma_smk_ma_schools`);
 
             onSnapshot(smpQuery, (snapshot) => {
-                const schools = []; // Define schools locally within the callback
+                const schools = []; 
                 let latestUpdateTimestamp = null;
                 snapshot.forEach((doc) => {
                     const data = doc.data();
                     schools.push({ id: doc.id, ...data });
-                    if (data.lastUpdated && (!latestUpdateTimestamp || data.lastUpdated.toDate() > latestUpdateTimestamp.toDate())) {
+                    if (data.lastUpdated && (!latestUpdateTimestamp || (data.lastUpdated.toDate && latestUpdateTimestamp.toDate && data.lastUpdated.toDate() > latestUpdateTimestamp.toDate()) || (!latestUpdateTimestamp && data.lastUpdated))) {
                         latestUpdateTimestamp = data.lastUpdated;
                     }
                 });
-                smpSchoolsData = schools; // Assign to global variable
-                smpRankingLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
-                renderFilteredRankings(); // Re-render when SMP data changes
+                smpSchoolsData = schools; 
+                // Only render if ranking page is currently active, otherwise just update data
+                if (!rankingPage.classList.contains('hidden')) {
+                     renderFilteredRankings(); 
+                }
             }, (error) => {
                 console.error("Error listening to SMP/MTs ranking:", error);
                 showToast("Gagal memuat ranking SMP/MTs.");
+                if (!rankingPage.classList.contains('hidden')) {
+                    renderFilteredRankings(); 
+                }
             });
 
             onSnapshot(smaQuery, (snapshot) => {
-                const schools = []; // Define schools locally within the callback
+                const schools = []; 
                 let latestUpdateTimestamp = null;
                 snapshot.forEach((doc) => {
                     const data = doc.data();
                     schools.push({ id: doc.id, ...data });
-                    if (data.lastUpdated && (!latestUpdateTimestamp || data.lastUpdated.toDate() > latestUpdateTimestamp.toDate())) {
+                    if (data.lastUpdated && (!latestUpdateTimestamp || (data.lastUpdated.toDate && latestUpdateTimestamp.toDate && data.lastUpdated.toDate() > latestUpdateTimestamp.toDate()) || (!latestUpdateTimestamp && data.lastUpdated))) {
                         latestUpdateTimestamp = data.lastUpdated;
                     }
                 });
-                smaSchoolsData = schools; // Assign to global variable
-                smaRankingLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
-                renderFilteredRankings(); // Re-render when SMA data changes
+                smaSchoolsData = schools; 
+                // Only render if ranking page is currently active, otherwise just update data
+                if (!rankingPage.classList.contains('hidden')) {
+                    renderFilteredRankings(); 
+                }
             }, (error) => {
                 console.error("Error listening to SMA/SMK/MA ranking:", error);
                 showToast("Gagal memuat ranking SMA/SMK/MA.");
+                if (!rankingPage.classList.contains('hidden')) {
+                    renderFilteredRankings(); 
+                }
             });
         }
 
+        // NEW: Function to decide what to show after loading animation
+        function finalizeRankingDisplay() {
+            // Check the current display status
+            if (displayRankingActive) {
+                hideLoadingAndShowContent(); // Show normal ranking content
+                renderFilteredRankings(); // Populate the tables
+            } else {
+                loadingAnimation.classList.add('hidden'); // Hide loading
+                rankingContent.classList.add('hidden'); // Ensure content is hidden
+                displayOffModal.classList.remove('hidden'); // Show the "Gagal memuat data" modal
+            }
+        }
 
         function renderFilteredRankings() {
-            // First, update the "last updated" timestamps, regardless of display status
-            // These lines were moved inside the onSnapshot callbacks to ensure they update immediately
-            // when data changes, even if display is off.
-            // smpRankingLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
-            // smaRankingLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(latestUpdateTimestamp)}`;
-
-            if (!displayRankingActive && !isAdminLoggedIn) { // Only hide for non-admin if display is off
-                displaySmpRanking.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Data tidak tersedia saat ini.</td></tr>`;
-                displaySmaRanking.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Data tidak tersedia saat ini.</td></tr>`;
-                // Clear timestamps or set to a placeholder when display is off for public view
-                smpRankingLastUpdated.textContent = 'Poin sudah diperbarui pada: -';
-                smaRankingLastUpdated.textContent = 'Poin sudah diperbarui pada: -';
-
-                hideLoadingAndShowContent();
-                return;
+            // Update "last updated" timestamps first using the global data
+            let smpLatest = null;
+            if (smpSchoolsData.length > 0) {
+                 smpLatest = smpSchoolsData.reduce((prev, current) => {
+                    const prevDate = prev.lastUpdated ? (prev.lastUpdated.toDate ? prev.lastUpdated.toDate() : prev.lastUpdated) : null;
+                    const currDate = current.lastUpdated ? (current.lastUpdated.toDate ? current.lastUpdated.toDate() : current.lastUpdated) : null;
+                    if (!prevDate) return current;
+                    if (!currDate) return prev;
+                    return prevDate > currDate ? prev : current;
+                 }).lastUpdated;
             }
+            smpRankingLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(smpLatest)}`;
 
+            let smaLatest = null;
+            if (smaSchoolsData.length > 0) {
+                smaLatest = smaSchoolsData.reduce((prev, current) => {
+                    const prevDate = prev.lastUpdated ? (prev.lastUpdated.toDate ? prev.lastUpdated.toDate() : prev.lastUpdated) : null;
+                    const currDate = current.lastUpdated ? (current.lastUpdated.toDate ? current.lastUpdated.toDate() : current.lastUpdated) : null;
+                    if (!prevDate) return current;
+                    if (!currDate) return prev;
+                    return prevDate > currDate ? prev : current;
+                }).lastUpdated;
+            }
+            smaRankingLastUpdated.textContent = `Poin diperbarui pada: ${formatTimestamp(smaLatest)}`;
+            
+            // Always render actual data here, as finalizeRankingDisplay controls visibility
             const filteredSmp = smpSchoolsData.filter(school =>
                 school.name.toLowerCase().includes(currentSearchQuery.toLowerCase())
             );
@@ -1539,8 +1700,6 @@
 
             renderRankingTable(filteredSmp, displaySmpRanking);
             renderRankingTable(filteredSma, displaySmaRanking);
-
-            hideLoadingAndShowContent();
         }
 
         function renderRankingTable(schools, tableBodyElement) {
@@ -1676,15 +1835,25 @@
                     // This can be done in an async block to avoid blocking initial load
                     setDoc(appSettingsDocRef, { displayActive: true }, { merge: true }).catch(console.error);
                 }
-                updateAdminDisplayStatusUI(); // Update admin panel UI
-                renderFilteredRankings(); // Re-render rankings based on new status
+                // Update UI in admin panel if it's currently visible
+                if (ballotInputPage.classList.contains('active')) {
+                    updateAdminDisplayStatusUI();
+                }
+                // If ranking page is visible, re-finalize display based on new status
+                if (!rankingPage.classList.contains('hidden')) {
+                    finalizeRankingDisplay();
+                }
             }, (error) => {
                 console.error("Error listening to display status:", error);
                 showToast("Gagal memuat status display.");
                 // Fallback to active display on error to avoid blank screen
                 displayRankingActive = true;
-                updateAdminDisplayStatusUI();
-                renderFilteredRankings();
+                if (ballotInputPage.classList.contains('active')) {
+                    updateAdminDisplayStatusUI();
+                }
+                if (!rankingPage.classList.contains('hidden')) {
+                    finalizeRankingDisplay();
+                }
             });
         }
 
@@ -1694,14 +1863,15 @@
                 displayStatus.textContent = "Status: Aktif";
                 displayStatus.classList.remove('text-red-600');
                 displayStatus.classList.add('text-green-600');
+                activateDisplayBtn.disabled = true;
+                deactivateDisplayBtn.disabled = false;
             } else {
                 displayStatus.textContent = "Status: Nonaktif";
                 displayStatus.classList.remove('text-green-600');
                 displayStatus.classList.add('text-red-600');
+                activateDisplayBtn.disabled = false;
+                deactivateDisplayBtn.disabled = true;
             }
-            // Enable/disable buttons based on current status
-            activateDisplayBtn.disabled = displayRankingActive;
-            deactivateDisplayBtn.disabled = !displayRankingActive;
         }
 
         // NEW: Event listeners for display control buttons
@@ -1714,12 +1884,11 @@
             if (user) {
                 currentUserId = user.uid;
                 console.log("Firebase authenticated with user ID:", currentUserId);
-                
                 isAdminLoggedIn = ADMIN_UIDS.includes(currentUserId);
                 
-                setupRankingListeners(); // Ini akan memicu listener data
+                setupRankingListeners(); // Ini akan memicu listener data ranking
                 setupUserAnnouncementListener(); // Setup listener untuk pengumuman di pop-up user
-                setupDisplayStatusListener(); // NEW: Setup listener for display status
+                setupDisplayStatusListener(); // Setup listener untuk status display
                 // startCountdownUpdate() hanya akan dipanggil saat admin masuk ke halaman announcementManagementPage
                 // di event listener goToAnnouncementManagementBtn.
             } else {
@@ -1727,8 +1896,8 @@
                 try {
                     await signInAnonymously(auth);
                     console.log("Signed in anonymously.");
-                } catch (error) {
-                    console.error("Error signing in anonymously:", error);
+                } catch (e) {
+                    console.error("Error signing in anonymously:", e);
                     showToast("Gagal melakukan autentikasi anonim. Coba lagi.");
                 }
             }
@@ -1748,9 +1917,6 @@
                                                userAnnouncementContent.textContent.replace(/<br>/g, '\n') !== defaultAnnouncementContent);
         });
 
-        // PENTING: Initial page display. Halaman home akan selalu ditampilkan secara default.
-        // homePage sudah tidak punya class 'hidden' di HTML, jadi ini sudah ditangani.
-
         // Pastikan header mengambil ruang (untuk min-h-screen-minus-header)
         document.addEventListener('DOMContentLoaded', () => {
             const headerHeight = document.querySelector('.header').offsetHeight;
@@ -1764,3 +1930,4 @@
     </script>
 </body>
 </html>
+
